@@ -1,16 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import UserProfile from '@/components/auth/UserProfile';
+import GalleryHeader from '@/components/gallery/GalleryHeader';
+import GalleryContent from '@/components/gallery/GalleryContent';
 import ArtworkUploadPanel from '@/components/artwork/ArtworkUploadPanel';
 import ArtworkViewPanel from '@/components/artwork/ArtworkViewPanel';
-import ArtworkGrid from '@/components/artwork/ArtworkGrid';
-import { Upload, Shield } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import LoadingSpinner from '@/components/ui/loading-spinner';
+import { useArtworkData } from '@/hooks/useArtworkData';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -28,105 +25,7 @@ const Index = () => {
     }
   }, [user, isAdmin, navigate]);
 
-  // Fetch artwork based on authentication status
-  // If user is signed in, show their own artwork
-  // If user is not signed in, show all published artwork
-  const { data: artworkData, isLoading: artworkLoading, refetch: refetchArtwork } = useQuery({
-    queryKey: ['artwork', user?.id],
-    queryFn: async () => {
-      if (user) {
-        // Fetch user's own artwork (both published and unpublished)
-        const { data, error } = await supabase
-          .from('artwork')
-          .select(`
-            id, 
-            title, 
-            created_at, 
-            image_url,
-            description,
-            medium,
-            year,
-            user_id,
-            published,
-            profiles!inner (
-              email,
-              artist_name
-            )
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Error fetching user artwork:', error);
-          return [];
-        }
-
-        return data || [];
-      } else {
-        // Fetch all published artwork for non-authenticated users
-        const { data, error } = await supabase
-          .from('artwork')
-          .select(`
-            id, 
-            title, 
-            created_at, 
-            image_url,
-            description,
-            medium,
-            year,
-            user_id,
-            profiles!inner (
-              email,
-              artist_name
-            )
-          `)
-          .eq('published', true)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Error fetching artwork:', error);
-          return [];
-        }
-
-        return data || [];
-      }
-    },
-  });
-
-  // Fetch user's recent artwork for the activity section
-  const { data: recentArtwork, isLoading: recentLoading } = useQuery({
-    queryKey: ['user-recent-artwork', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('artwork')
-        .select(`
-          id, 
-          title, 
-          created_at, 
-          image_url,
-          description,
-          medium,
-          year,
-          profiles!inner (
-            email,
-            artist_name
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) {
-        console.error('Error fetching recent artwork:', error);
-        return [];
-      }
-
-      return data || [];
-    },
-    enabled: !!user?.id,
-  });
+  const { data: artworkData, isLoading: artworkLoading, refetch: refetchArtwork } = useArtworkData(user);
 
   const handleArtworkClick = (artwork: any) => {
     setSelectedArtwork(artwork);
@@ -145,10 +44,14 @@ const Index = () => {
     navigate('/auth');
   };
 
+  const handleUploadClick = () => {
+    setUploadPanelOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin w-8 h-8 border-2 border-foreground border-t-transparent"></div>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -157,81 +60,34 @@ const Index = () => {
   if (user && isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin w-8 h-8 border-2 border-foreground border-t-transparent"></div>
+        <LoadingSpinner />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="gallery-header">
-        <div className="container mx-auto px-6 py-6 flex justify-between items-center">
-          <div className="text-left">
-            <h1 className="text-3xl font-light tracking-[0.3em] text-foreground mb-1">
-              GALLERY
-            </h1>
-            <p className="text-xs font-light tracking-[0.2em] text-muted-foreground uppercase">
-              {user ? 'Your Digital Art Collection' : 'Curated Digital Art Space'}
-            </p>
-          </div>
-          <div className="flex items-center gap-6">
-            {user ? (
-              <>
-                <Button 
-                  onClick={() => setUploadPanelOpen(true)} 
-                  className="gallery-button flex items-center gap-3 px-6 py-2 font-light tracking-wide"
-                >
-                  <Upload className="h-4 w-4" />
-                  UPLOAD
-                </Button>
-                <UserProfile />
-              </>
-            ) : (
-              <button 
-                onClick={handleSignInClick}
-                className="text-muted-foreground hover:text-foreground transition-colors font-light tracking-wide text-sm underline-offset-4 hover:underline"
-              >
-                Artist Sign in
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+      <GalleryHeader 
+        user={user}
+        onUploadClick={handleUploadClick}
+        onSignInClick={handleSignInClick}
+      />
 
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-12">
-        {/* Gallery Section - Main Content */}
-        <div className="mb-16">
-          {artworkLoading ? (
-            <div className="flex items-center justify-center py-24">
-              <div className="animate-spin w-8 h-8 border-2 border-foreground border-t-transparent"></div>
-            </div>
-          ) : artworkData && artworkData.length > 0 ? (
-            <ArtworkGrid 
-              artworks={artworkData} 
-              onArtworkClick={handleArtworkClick}
-              onArtworkDeleted={handleArtworkDeleted}
-            />
-          ) : (
-            <div className="text-center py-24 border border-border">
-              <p className="text-muted-foreground font-light text-lg">
-                {user ? 'You haven\'t uploaded any artwork yet.' : 'No artwork available in the gallery yet.'}
-              </p>
-            </div>
-          )}
-        </div>
-      </main>
+      <GalleryContent 
+        user={user}
+        artworkData={artworkData}
+        artworkLoading={artworkLoading}
+        onArtworkClick={handleArtworkClick}
+        onArtworkDeleted={handleArtworkDeleted}
+      />
 
       {/* Slide-in Panels - Only show if user is authenticated */}
       {user && (
-        <>
-          <ArtworkUploadPanel 
-            open={uploadPanelOpen} 
-            onOpenChange={setUploadPanelOpen}
-            onUploadSuccess={handleUploadSuccess}
-          />
-        </>
+        <ArtworkUploadPanel 
+          open={uploadPanelOpen} 
+          onOpenChange={setUploadPanelOpen}
+          onUploadSuccess={handleUploadSuccess}
+        />
       )}
       
       <ArtworkViewPanel 
