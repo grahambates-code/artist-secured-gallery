@@ -6,10 +6,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import UserProfile from '@/components/auth/UserProfile';
 import { Palette, Heart, Share2, Upload, Shield } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Fetch user's recent artwork
+  const { data: recentArtwork, isLoading: artworkLoading } = useQuery({
+    queryKey: ['user-recent-artwork', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('artwork')
+        .select('id, title, created_at, image_url')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error('Error fetching recent artwork:', error);
+        return [];
+      }
+
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -146,9 +171,40 @@ const Index = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-500 text-center py-8">
-              No recent activity yet. Start by uploading your first artwork!
-            </p>
+            {artworkLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              </div>
+            ) : recentArtwork && recentArtwork.length > 0 ? (
+              <div className="space-y-4">
+                {recentArtwork.map((artwork) => (
+                  <div key={artwork.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <img 
+                      src={artwork.image_url} 
+                      alt={artwork.title}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">{artwork.title}</h3>
+                      <p className="text-sm text-gray-500">
+                        Uploaded {new Date(artwork.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {recentArtwork.length === 5 && (
+                  <div className="text-center pt-4">
+                    <Button variant="outline" onClick={() => navigate('/upload')}>
+                      View All Artwork
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">
+                No recent activity yet. Start by uploading your first artwork!
+              </p>
+            )}
           </CardContent>
         </Card>
       </main>
