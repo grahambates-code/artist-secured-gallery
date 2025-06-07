@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -91,25 +92,25 @@ const SuperAdminPage = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Please log in to access this page.</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-foreground">Please log in to access this page.</p>
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="max-w-md gallery-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
+            <CardTitle className="flex items-center gap-2 text-destructive">
               <Shield className="h-5 w-5" />
               Access Denied
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p>You don't have permission to access the admin panel.</p>
-            <p className="text-sm text-gray-500 mt-2">Current email: {user.email}</p>
+            <p className="text-foreground">You don't have permission to access the admin panel.</p>
+            <p className="text-sm text-muted-foreground mt-2">Current email: {user.email}</p>
           </CardContent>
         </Card>
       </div>
@@ -118,46 +119,46 @@ const SuperAdminPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold flex items-center gap-2 mb-2">
-            <Shield className="h-8 w-8 text-purple-600" />
+          <h1 className="text-3xl font-bold flex items-center gap-2 mb-2 text-foreground">
+            <Shield className="h-8 w-8 text-accent-foreground" />
             Super Admin Panel
           </h1>
-          <p className="text-gray-600">Manage all artwork submissions across the platform</p>
-          <p className="text-sm text-gray-500">Logged in as: {user.email}</p>
+          <p className="text-muted-foreground">Manage all artwork submissions across the platform</p>
+          <p className="text-sm text-muted-foreground">Logged in as: {user.email}</p>
         </div>
 
         <div className="mb-6">
-          <Card>
+          <Card className="gallery-card">
             <CardHeader>
-              <CardTitle>Statistics</CardTitle>
+              <CardTitle className="text-foreground">Statistics</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{artworks.length}</div>
-                  <div className="text-sm text-gray-600">Total Artworks</div>
+                <div className="text-center p-4 bg-accent rounded-lg">
+                  <div className="text-2xl font-bold text-accent-foreground">{artworks.length}</div>
+                  <div className="text-sm text-muted-foreground">Total Artworks</div>
                 </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
+                <div className="text-center p-4 bg-accent rounded-lg">
+                  <div className="text-2xl font-bold text-accent-foreground">
                     {artworks.filter(a => a.published).length}
                   </div>
-                  <div className="text-sm text-gray-600">Published</div>
+                  <div className="text-sm text-muted-foreground">Published</div>
                 </div>
-                <div className="text-center p-4 bg-orange-50 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">
+                <div className="text-center p-4 bg-accent rounded-lg">
+                  <div className="text-2xl font-bold text-accent-foreground">
                     {new Set(artworks.map(a => a.user_id)).size}
                   </div>
-                  <div className="text-sm text-gray-600">Unique Artists</div>
+                  <div className="text-sm text-muted-foreground">Unique Artists</div>
                 </div>
               </div>
             </CardContent>
@@ -166,7 +167,7 @@ const SuperAdminPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {artworks.map((artwork) => (
-            <Card key={artwork.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+            <Card key={artwork.id} className="gallery-card overflow-hidden hover:bg-accent/50 transition-colors">
               <div className="aspect-square relative">
                 <img
                   src={artwork.image_url}
@@ -181,39 +182,39 @@ const SuperAdminPage = () => {
               </div>
               
               <CardContent className="p-4">
-                <h3 className="font-semibold text-lg mb-2">{artwork.title}</h3>
+                <h3 className="font-semibold text-lg mb-2 text-foreground">{artwork.title}</h3>
                 
                 {artwork.description && (
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                     {artwork.description}
                   </p>
                 )}
                 
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-foreground">
                       {artwork.profiles?.artist_name || 'Unknown Artist'}
                     </span>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-gray-500" />
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-mono text-xs bg-muted px-2 py-1 rounded text-muted-foreground">
                       {artwork.profiles?.email || 'No email'}
                     </span>
                   </div>
                   
                   {artwork.medium && (
                     <div className="flex items-center gap-2">
-                      <ImageIcon className="h-4 w-4 text-gray-500" />
-                      <span>{artwork.medium}</span>
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-foreground">{artwork.medium}</span>
                     </div>
                   )}
                   
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <span>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-foreground">
                       {artwork.year || 'Year not specified'} • 
                       Added {new Date(artwork.created_at).toLocaleDateString()}
                     </span>
@@ -225,11 +226,11 @@ const SuperAdminPage = () => {
         </div>
 
         {artworks.length === 0 && (
-          <Card className="text-center py-12">
+          <Card className="gallery-card text-center py-12">
             <CardContent>
-              <ImageIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No artwork found</h3>
-              <p className="text-gray-600">No artwork has been uploaded yet.</p>
+              <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2 text-foreground">No artwork found</h3>
+              <p className="text-muted-foreground">No artwork has been uploaded yet.</p>
             </CardContent>
           </Card>
         )}
