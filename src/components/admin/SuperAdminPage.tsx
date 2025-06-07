@@ -93,7 +93,7 @@ const SuperAdminPage = () => {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-foreground">Please log in to access this page.</p>
+        <p className="text-foreground font-light">Please log in to access this page.</p>
       </div>
     );
   }
@@ -103,14 +103,14 @@ const SuperAdminPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="max-w-md gallery-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
+            <CardTitle className="flex items-center gap-2 text-destructive font-light tracking-wide">
               <Shield className="h-5 w-5" />
-              Access Denied
+              ACCESS DENIED
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-foreground">You don't have permission to access the admin panel.</p>
-            <p className="text-sm text-muted-foreground mt-2">Current email: {user.email}</p>
+            <p className="text-foreground font-light">You don't have permission to access the admin panel.</p>
+            <p className="text-sm text-muted-foreground mt-2 font-light">Current email: {user.email}</p>
           </CardContent>
         </Card>
       </div>
@@ -129,36 +129,36 @@ const SuperAdminPage = () => {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold flex items-center gap-2 mb-2 text-foreground">
+          <h1 className="text-3xl font-light tracking-[0.3em] flex items-center gap-2 mb-2 text-foreground">
             <Shield className="h-8 w-8 text-accent-foreground" />
-            Super Admin Panel
+            SUPER ADMIN PANEL
           </h1>
-          <p className="text-muted-foreground">Manage all artwork submissions across the platform</p>
-          <p className="text-sm text-muted-foreground">Logged in as: {user.email}</p>
+          <p className="text-muted-foreground font-light tracking-wide">Manage all artwork submissions across the platform</p>
+          <p className="text-sm text-muted-foreground font-light">Logged in as: {user.email}</p>
         </div>
 
         <div className="mb-6">
           <Card className="gallery-card">
             <CardHeader>
-              <CardTitle className="text-foreground">Statistics</CardTitle>
+              <CardTitle className="text-foreground font-light tracking-wide">STATISTICS</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-accent rounded-lg">
-                  <div className="text-2xl font-bold text-accent-foreground">{artworks.length}</div>
-                  <div className="text-sm text-muted-foreground">Total Artworks</div>
+                  <div className="text-2xl font-light text-accent-foreground">{artworks.length}</div>
+                  <div className="text-sm text-muted-foreground font-light tracking-wide">Total Artworks</div>
                 </div>
                 <div className="text-center p-4 bg-accent rounded-lg">
-                  <div className="text-2xl font-bold text-accent-foreground">
+                  <div className="text-2xl font-light text-accent-foreground">
                     {artworks.filter(a => a.published).length}
                   </div>
-                  <div className="text-sm text-muted-foreground">Published</div>
+                  <div className="text-sm text-muted-foreground font-light tracking-wide">Published</div>
                 </div>
                 <div className="text-center p-4 bg-accent rounded-lg">
-                  <div className="text-2xl font-bold text-accent-foreground">
+                  <div className="text-2xl font-light text-accent-foreground">
                     {new Set(artworks.map(a => a.user_id)).size}
                   </div>
-                  <div className="text-sm text-muted-foreground">Unique Artists</div>
+                  <div className="text-sm text-muted-foreground font-light tracking-wide">Unique Artists</div>
                 </div>
               </div>
             </CardContent>
@@ -175,17 +175,17 @@ const SuperAdminPage = () => {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-2 right-2">
-                  <Badge variant={artwork.published ? "default" : "secondary"}>
+                  <Badge variant={artwork.published ? "default" : "secondary"} className="font-light">
                     {artwork.published ? "Published" : "Draft"}
                   </Badge>
                 </div>
               </div>
               
               <CardContent className="p-4">
-                <h3 className="font-semibold text-lg mb-2 text-foreground">{artwork.title}</h3>
+                <h3 className="font-light text-lg mb-2 text-foreground tracking-wide">{artwork.title}</h3>
                 
                 {artwork.description && (
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2 font-light">
                     {artwork.description}
                   </p>
                 )}
@@ -193,14 +193,14 @@ const SuperAdminPage = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-foreground">
+                    <span className="font-light text-foreground">
                       {artwork.profiles?.artist_name || 'Unknown Artist'}
                     </span>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-mono text-xs bg-muted px-2 py-1 rounded text-muted-foreground">
+                    <span className="font-mono text-xs bg-muted px-2 py-1 rounded text-muted-foreground font-light">
                       {artwork.profiles?.email || 'No email'}
                     </span>
                   </div>
@@ -208,13 +208,13 @@ const SuperAdminPage = () => {
                   {artwork.medium && (
                     <div className="flex items-center gap-2">
                       <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-foreground">{artwork.medium}</span>
+                      <span className="text-foreground font-light">{artwork.medium}</span>
                     </div>
                   )}
                   
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">
+                    <span className="text-foreground font-light">
                       {artwork.year || 'Year not specified'} • 
                       Added {new Date(artwork.created_at).toLocaleDateString()}
                     </span>
@@ -229,8 +229,8 @@ const SuperAdminPage = () => {
           <Card className="gallery-card text-center py-12">
             <CardContent>
               <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2 text-foreground">No artwork found</h3>
-              <p className="text-muted-foreground">No artwork has been uploaded yet.</p>
+              <h3 className="text-lg font-light mb-2 text-foreground tracking-wide">No artwork found</h3>
+              <p className="text-muted-foreground font-light">No artwork has been uploaded yet.</p>
             </CardContent>
           </Card>
         )}
