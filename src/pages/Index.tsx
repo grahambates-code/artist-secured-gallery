@@ -1,9 +1,12 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import UserProfile from '@/components/auth/UserProfile';
+import ArtworkUploadPanel from '@/components/artwork/ArtworkUploadPanel';
+import ArtworkViewPanel from '@/components/artwork/ArtworkViewPanel';
 import { Palette, Heart, Share2, Upload, Shield, Mail } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,9 +14,12 @@ import { supabase } from '@/integrations/supabase/client';
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [uploadPanelOpen, setUploadPanelOpen] = useState(false);
+  const [viewPanelOpen, setViewPanelOpen] = useState(false);
+  const [selectedArtwork, setSelectedArtwork] = useState<any>(null);
 
   // Fetch user's recent artwork with profile information
-  const { data: recentArtwork, isLoading: artworkLoading } = useQuery({
+  const { data: recentArtwork, isLoading: artworkLoading, refetch: refetchArtwork } = useQuery({
     queryKey: ['user-recent-artwork', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -25,6 +31,9 @@ const Index = () => {
           title, 
           created_at, 
           image_url,
+          description,
+          medium,
+          year,
           profiles!inner (
             email,
             artist_name
@@ -50,6 +59,15 @@ const Index = () => {
     }
   }, [user, loading, navigate]);
 
+  const handleArtworkClick = (artwork: any) => {
+    setSelectedArtwork(artwork);
+    setViewPanelOpen(true);
+  };
+
+  const handleUploadSuccess = () => {
+    refetchArtwork();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -73,7 +91,7 @@ const Index = () => {
             Art Gallery
           </h1>
           <div className="flex items-center gap-4">
-            <Button onClick={() => navigate('/upload')} className="flex items-center gap-2">
+            <Button onClick={() => setUploadPanelOpen(true)} className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
               Upload Art
             </Button>
@@ -114,7 +132,7 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" onClick={() => navigate('/upload')}>
+              <Button className="w-full" onClick={() => setUploadPanelOpen(true)}>
                 Upload Artwork
               </Button>
             </CardContent>
@@ -186,7 +204,11 @@ const Index = () => {
             ) : recentArtwork && recentArtwork.length > 0 ? (
               <div className="space-y-4">
                 {recentArtwork.map((artwork) => (
-                  <div key={artwork.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div 
+                    key={artwork.id} 
+                    className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => handleArtworkClick(artwork)}
+                  >
                     <img 
                       src={artwork.image_url} 
                       alt={artwork.title}
@@ -208,8 +230,8 @@ const Index = () => {
                 ))}
                 {recentArtwork.length === 5 && (
                   <div className="text-center pt-4">
-                    <Button variant="outline" onClick={() => navigate('/upload')}>
-                      View All Artwork
+                    <Button variant="outline" onClick={() => setUploadPanelOpen(true)}>
+                      Upload More Artwork
                     </Button>
                   </div>
                 )}
@@ -222,6 +244,19 @@ const Index = () => {
           </CardContent>
         </Card>
       </main>
+
+      {/* Slide-in Panels */}
+      <ArtworkUploadPanel 
+        open={uploadPanelOpen} 
+        onOpenChange={setUploadPanelOpen}
+        onUploadSuccess={handleUploadSuccess}
+      />
+      
+      <ArtworkViewPanel 
+        open={viewPanelOpen} 
+        onOpenChange={setViewPanelOpen}
+        artwork={selectedArtwork}
+      />
     </div>
   );
 };
