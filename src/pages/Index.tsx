@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -136,6 +137,10 @@ const Index = () => {
     refetchArtwork();
   };
 
+  const handleArtworkDeleted = () => {
+    refetchArtwork();
+  };
+
   const handleSignInClick = () => {
     navigate('/auth');
   };
@@ -203,7 +208,11 @@ const Index = () => {
               <div className="animate-spin w-8 h-8 border-2 border-foreground border-t-transparent"></div>
             </div>
           ) : artworkData && artworkData.length > 0 ? (
-            <ArtworkGrid artworks={artworkData} onArtworkClick={handleArtworkClick} />
+            <ArtworkGrid 
+              artworks={artworkData} 
+              onArtworkClick={handleArtworkClick}
+              onArtworkDeleted={handleArtworkDeleted}
+            />
           ) : (
             <div className="text-center py-24 border border-border">
               <p className="text-muted-foreground font-light text-lg">

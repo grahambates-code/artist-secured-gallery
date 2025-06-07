@@ -1,5 +1,10 @@
+
 import React from 'react';
-import { Calendar, Palette, User } from 'lucide-react';
+import { Calendar, Palette, User, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Artwork {
   id: string;
@@ -10,6 +15,7 @@ interface Artwork {
   year?: number;
   created_at: string;
   user_id: string;
+  published?: boolean;
   profiles?: {
     email: string;
     artist_name?: string;
@@ -19,9 +25,13 @@ interface Artwork {
 interface ArtworkGridProps {
   artworks: Artwork[];
   onArtworkClick: (artwork: Artwork) => void;
+  onArtworkDeleted?: () => void;
 }
 
-const ArtworkGrid = ({ artworks, onArtworkClick }: ArtworkGridProps) => {
+const ArtworkGrid = ({ artworks, onArtworkClick, onArtworkDeleted }: ArtworkGridProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
   // Group artworks by artist email
   const groupedArtworks = artworks.reduce((groups: Record<string, Artwork[]>, artwork) => {
     const artistEmail = artwork.profiles?.email || 'Unknown Artist';
@@ -31,6 +41,45 @@ const ArtworkGrid = ({ artworks, onArtworkClick }: ArtworkGridProps) => {
     groups[artistEmail].push(artwork);
     return groups;
   }, {} as Record<string, Artwork[]>);
+
+  const handleDeleteArtwork = async (artwork: Artwork, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent artwork click event
+    
+    if (!user || user.id !== artwork.user_id) {
+      toast({
+        title: "Permission denied",
+        description: "You can only delete your own artwork",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('artwork')
+        .delete()
+        .eq('id', artwork.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Artwork deleted",
+        description: `"${artwork.title}" has been successfully deleted`,
+      });
+
+      // Trigger refresh of artwork list
+      if (onArtworkDeleted) {
+        onArtworkDeleted();
+      }
+    } catch (error: any) {
+      console.error('Error deleting artwork:', error);
+      toast({
+        title: "Error deleting artwork",
+        description: error.message || "Failed to delete artwork",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Generate artist bios
   const getArtistBio = (email: string, artworkCount: number) => {
@@ -71,7 +120,7 @@ const ArtworkGrid = ({ artworks, onArtworkClick }: ArtworkGridProps) => {
             {artistWorks.map((artwork) => (
               <div 
                 key={artwork.id}
-                className="group cursor-pointer"
+                className="group cursor-pointer relative"
                 onClick={() => onArtworkClick(artwork)}
               >
                 <div className="relative overflow-hidden bg-card border border-border transition-all duration-300 hover:border-foreground">
@@ -81,6 +130,20 @@ const ArtworkGrid = ({ artworks, onArtworkClick }: ArtworkGridProps) => {
                       alt={artwork.title}
                       className="w-full h-64 object-cover transition-all duration-500 ease-out group-hover:scale-[1.02] group-hover:contrast-110"
                     />
+                    
+                    {/* Delete button - only show for artwork owner */}
+                    {user && user.id === artwork.user_id && (
+                      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={(e) => handleDeleteArtwork(artwork, e)}
+                          className="h-8 w-8 p-0 bg-destructive/80 hover:bg-destructive backdrop-blur-sm"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
                     
                     {/* Minimalist hover overlay */}
                     <div className="absolute inset-0 bg-background/0 group-hover:bg-background/85 transition-all duration-300 ease-out">
