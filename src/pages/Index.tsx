@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,35 +19,68 @@ const Index = () => {
   const [viewPanelOpen, setViewPanelOpen] = useState(false);
   const [selectedArtwork, setSelectedArtwork] = useState<any>(null);
 
-  // Fetch all published artwork with profile information
-  const { data: allArtwork, isLoading: artworkLoading, refetch: refetchArtwork } = useQuery({
-    queryKey: ['all-artwork'],
+  // Fetch artwork based on authentication status
+  // If user is signed in, show their own artwork
+  // If user is not signed in, show all published artwork
+  const { data: artworkData, isLoading: artworkLoading, refetch: refetchArtwork } = useQuery({
+    queryKey: ['artwork', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('artwork')
-        .select(`
-          id, 
-          title, 
-          created_at, 
-          image_url,
-          description,
-          medium,
-          year,
-          user_id,
-          profiles!inner (
-            email,
-            artist_name
-          )
-        `)
-        .eq('published', true)
-        .order('created_at', { ascending: false });
+      if (user) {
+        // Fetch user's own artwork (both published and unpublished)
+        const { data, error } = await supabase
+          .from('artwork')
+          .select(`
+            id, 
+            title, 
+            created_at, 
+            image_url,
+            description,
+            medium,
+            year,
+            user_id,
+            published,
+            profiles!inner (
+              email,
+              artist_name
+            )
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching artwork:', error);
-        return [];
+        if (error) {
+          console.error('Error fetching user artwork:', error);
+          return [];
+        }
+
+        return data || [];
+      } else {
+        // Fetch all published artwork for non-authenticated users
+        const { data, error } = await supabase
+          .from('artwork')
+          .select(`
+            id, 
+            title, 
+            created_at, 
+            image_url,
+            description,
+            medium,
+            year,
+            user_id,
+            profiles!inner (
+              email,
+              artist_name
+            )
+          `)
+          .eq('published', true)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching artwork:', error);
+          return [];
+        }
+
+        return data || [];
       }
-
-      return data || [];
     },
   });
 
@@ -118,7 +152,7 @@ const Index = () => {
               GALLERY
             </h1>
             <p className="text-xs font-light tracking-[0.2em] text-muted-foreground uppercase">
-              Curated Digital Art Space
+              {user ? 'Your Digital Art Collection' : 'Curated Digital Art Space'}
             </p>
           </div>
           <div className="flex items-center gap-6">
@@ -186,12 +220,12 @@ const Index = () => {
             <div className="flex items-center justify-center py-24">
               <div className="animate-spin w-8 h-8 border-2 border-foreground border-t-transparent"></div>
             </div>
-          ) : allArtwork && allArtwork.length > 0 ? (
-            <ArtworkGrid artworks={allArtwork} onArtworkClick={handleArtworkClick} />
+          ) : artworkData && artworkData.length > 0 ? (
+            <ArtworkGrid artworks={artworkData} onArtworkClick={handleArtworkClick} />
           ) : (
             <div className="text-center py-24 border border-border">
               <p className="text-muted-foreground font-light text-lg">
-                No artwork available in the gallery yet.
+                {user ? 'You haven\'t uploaded any artwork yet.' : 'No artwork available in the gallery yet.'}
               </p>
             </div>
           )}
