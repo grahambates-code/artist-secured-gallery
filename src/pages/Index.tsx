@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -69,8 +70,8 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin w-8 h-8 border-2 border-foreground border-t-transparent"></div>
       </div>
     );
   }
@@ -82,26 +83,29 @@ const Index = () => {
   const isAdmin = user.email === 'mogmog@gmail.com';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Art Gallery
+      <header className="gallery-header">
+        <div className="container mx-auto px-6 py-6 flex justify-between items-center">
+          <h1 className="text-2xl font-light tracking-wide text-foreground">
+            GALLERY
           </h1>
-          <div className="flex items-center gap-4">
-            <Button onClick={() => setUploadPanelOpen(true)} className="flex items-center gap-2">
+          <div className="flex items-center gap-6">
+            <Button 
+              onClick={() => setUploadPanelOpen(true)} 
+              className="gallery-button flex items-center gap-3 px-6 py-2 font-light tracking-wide"
+            >
               <Upload className="h-4 w-4" />
-              Upload Art
+              UPLOAD
             </Button>
             {isAdmin && (
               <Button 
                 onClick={() => navigate('/admin')} 
+                className="gallery-button-outline flex items-center gap-3 px-6 py-2 font-light tracking-wide"
                 variant="outline"
-                className="flex items-center gap-2"
               >
                 <Shield className="h-4 w-4" />
-                Admin
+                ADMIN
               </Button>
             )}
             <UserProfile />
@@ -110,64 +114,64 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-6 py-12">
         {/* Admin Access */}
         {isAdmin && (
-          <Card className="mb-12 border-yellow-200 bg-yellow-50">
+          <Card className="gallery-card mb-12 border-accent bg-accent/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-yellow-800">
+              <CardTitle className="flex items-center gap-3 text-foreground font-light tracking-wide">
                 <Shield className="h-5 w-5" />
-                Admin Access
+                ADMIN ACCESS
               </CardTitle>
-              <CardDescription className="text-yellow-700">
-                You have super admin privileges and can view all artwork submissions
+              <CardDescription className="text-muted-foreground font-light">
+                Super admin privileges - view all artwork submissions
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button 
                 onClick={() => navigate('/admin')} 
-                className="bg-yellow-600 hover:bg-yellow-700"
+                className="gallery-button px-6 py-2 font-light tracking-wide"
               >
-                Access Admin Panel
+                ACCESS ADMIN PANEL
               </Button>
             </CardContent>
           </Card>
         )}
 
         {/* Recent Activity */}
-        <Card>
+        <Card className="gallery-card">
           <CardHeader>
-            <CardTitle>Your Recent Activity</CardTitle>
-            <CardDescription>
-              Keep track of your artwork and interactions
+            <CardTitle className="text-foreground font-light tracking-wide">RECENT ACTIVITY</CardTitle>
+            <CardDescription className="text-muted-foreground font-light">
+              Your artwork and interactions
             </CardDescription>
           </CardHeader>
           <CardContent>
             {artworkLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin w-6 h-6 border-2 border-foreground border-t-transparent"></div>
               </div>
             ) : recentArtwork && recentArtwork.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-1">
                 {recentArtwork.map((artwork) => (
                   <div 
                     key={artwork.id} 
-                    className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="flex items-center gap-6 p-4 border-b border-border last:border-b-0 hover:bg-accent/50 transition-colors cursor-pointer"
                     onClick={() => handleArtworkClick(artwork)}
                   >
                     <img 
                       src={artwork.image_url} 
                       alt={artwork.title}
-                      className="w-16 h-16 object-cover rounded-lg"
+                      className="w-16 h-16 object-cover"
                     />
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{artwork.title}</h3>
-                      <p className="text-sm text-gray-500">
-                        Uploaded {new Date(artwork.created_at).toLocaleDateString()}
+                      <h3 className="font-light text-foreground tracking-wide">{artwork.title}</h3>
+                      <p className="text-sm text-muted-foreground font-light">
+                        {new Date(artwork.created_at).toLocaleDateString()}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Mail className="h-3 w-3 text-gray-400" />
-                        <span className="text-xs text-gray-500 font-mono">
+                        <Mail className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground font-mono">
                           {artwork.profiles?.email || 'No email'}
                         </span>
                       </div>
@@ -175,17 +179,23 @@ const Index = () => {
                   </div>
                 ))}
                 {recentArtwork.length === 5 && (
-                  <div className="text-center pt-4">
-                    <Button variant="outline" onClick={() => setUploadPanelOpen(true)}>
-                      Upload More Artwork
+                  <div className="text-center pt-6">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setUploadPanelOpen(true)}
+                      className="gallery-button-outline px-6 py-2 font-light tracking-wide"
+                    >
+                      UPLOAD MORE ARTWORK
                     </Button>
                   </div>
                 )}
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-8">
-                No recent activity yet. Start by uploading your first artwork!
-              </p>
+              <div className="text-center py-12">
+                <p className="text-muted-foreground font-light">
+                  No recent activity. Start by uploading your first artwork.
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>

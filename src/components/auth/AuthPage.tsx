@@ -31,27 +31,27 @@ const AuthPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin w-8 h-8 border-2 border-foreground border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background p-6">
+      <Card className="gallery-card w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Welcome to Art Gallery
+          <CardTitle className="text-2xl font-light tracking-wide text-foreground">
+            GALLERY
           </CardTitle>
-          <CardDescription>
-            Sign in to showcase and discover amazing artwork
+          <CardDescription className="text-muted-foreground font-light">
+            Sign in to showcase and discover artwork
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <Button 
             onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            className="w-full flex items-center justify-center gap-3 bg-card text-card-foreground border border-border hover:bg-accent hover:text-accent-foreground font-light tracking-wide py-3"
             variant="outline"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -72,7 +72,7 @@ const AuthPage = () => {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Continue with Google
+            CONTINUE WITH GOOGLE
           </Button>
         </CardContent>
       </Card>
