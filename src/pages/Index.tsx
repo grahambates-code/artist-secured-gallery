@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,15 @@ const Index = () => {
   const [uploadPanelOpen, setUploadPanelOpen] = useState(false);
   const [viewPanelOpen, setViewPanelOpen] = useState(false);
   const [selectedArtwork, setSelectedArtwork] = useState<any>(null);
+
+  const isAdmin = user?.email === 'mogmog@gmail.com';
+
+  // Redirect super admin to admin panel
+  useEffect(() => {
+    if (user && isAdmin) {
+      navigate('/admin');
+    }
+  }, [user, isAdmin, navigate]);
 
   // Fetch artwork based on authentication status
   // If user is signed in, show their own artwork
@@ -140,7 +148,14 @@ const Index = () => {
     );
   }
 
-  const isAdmin = user?.email === 'mogmog@gmail.com';
+  // Don't render anything for admin users as they'll be redirected
+  if (user && isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin w-8 h-8 border-2 border-foreground border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -158,25 +173,13 @@ const Index = () => {
           <div className="flex items-center gap-6">
             {user ? (
               <>
-                {!isAdmin && (
-                  <Button 
-                    onClick={() => setUploadPanelOpen(true)} 
-                    className="gallery-button flex items-center gap-3 px-6 py-2 font-light tracking-wide"
-                  >
-                    <Upload className="h-4 w-4" />
-                    UPLOAD
-                  </Button>
-                )}
-                {isAdmin && (
-                  <Button 
-                    onClick={() => navigate('/admin')} 
-                    className="gallery-button-outline flex items-center gap-3 px-6 py-2 font-light tracking-wide"
-                    variant="outline"
-                  >
-                    <Shield className="h-4 w-4" />
-                    ADMIN
-                  </Button>
-                )}
+                <Button 
+                  onClick={() => setUploadPanelOpen(true)} 
+                  className="gallery-button flex items-center gap-3 px-6 py-2 font-light tracking-wide"
+                >
+                  <Upload className="h-4 w-4" />
+                  UPLOAD
+                </Button>
                 <UserProfile />
               </>
             ) : (
@@ -193,29 +196,6 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-12">
-        {/* Admin Access - Only show if user is admin */}
-        {user && isAdmin && (
-          <Card className="gallery-card mb-12 border-accent bg-accent/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-foreground font-light tracking-wide">
-                <Shield className="h-5 w-5" />
-                ADMIN ACCESS
-              </CardTitle>
-              <CardDescription className="text-muted-foreground font-light">
-                Super admin privileges - view all artwork submissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                onClick={() => navigate('/admin')} 
-                className="gallery-button px-6 py-2 font-light tracking-wide"
-              >
-                ACCESS ADMIN PANEL
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Gallery Section - Main Content */}
         <div className="mb-16">
           {artworkLoading ? (
@@ -234,8 +214,8 @@ const Index = () => {
         </div>
       </main>
 
-      {/* Slide-in Panels - Only show if user is authenticated and not admin */}
-      {user && !isAdmin && (
+      {/* Slide-in Panels - Only show if user is authenticated */}
+      {user && (
         <>
           <ArtworkUploadPanel 
             open={uploadPanelOpen} 
