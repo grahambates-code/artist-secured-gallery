@@ -17,10 +17,8 @@ interface ArtworkWithProfile {
   published: boolean;
   created_at: string;
   user_id: string;
-  profiles: {
-    email: string | null;
-    artist_name: string | null;
-  } | null;
+  user_email: string | null;
+  artist_name: string | null;
 }
 
 const SuperAdminPage = () => {
@@ -43,43 +41,57 @@ const SuperAdminPage = () => {
   const checkAdminStatus = async () => {
     if (!user) return;
     
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('id', user.id)
-        .single();
-      
-      const adminStatus = profile?.email === 'mogmog@gmail.com';
-      setIsAdmin(adminStatus);
-      
-      if (!adminStatus) {
-        toast({
-          title: "Access Denied",
-          description: "You don't have admin privileges",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Error checking admin status:', error);
+    console.log('Checking admin status for user:', user.email);
+    
+    // Check if user email is mogmog@gmail.com
+    const adminStatus = user.email === 'mogmog@gmail.com';
+    console.log('Admin status:', adminStatus);
+    setIsAdmin(adminStatus);
+    
+    if (!adminStatus) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have admin privileges",
+        variant: "destructive"
+      });
     }
   };
 
   const fetchAllArtworks = async () => {
     try {
-      const { data, error } = await supabase
+      console.log('Fetching all artworks...');
+      
+      // First get all artwork
+      const { data: artworkData, error: artworkError } = await supabase
         .from('artwork')
-        .select(`
-          *,
-          profiles (
-            email,
-            artist_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setArtworks(data || []);
+      if (artworkError) throw artworkError;
+
+      console.log('Artwork data:', artworkData);
+
+      // Then get all profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, artist_name');
+
+      if (profilesError) throw profilesError;
+
+      console.log('Profiles data:', profilesData);
+
+      // Manually join the data
+      const artworksWithProfiles: ArtworkWithProfile[] = (artworkData || []).map(artwork => {
+        const profile = profilesData?.find(p => p.id === artwork.user_id);
+        return {
+          ...artwork,
+          user_email: profile?.email || null,
+          artist_name: profile?.artist_name || null
+        };
+      });
+
+      console.log('Merged artwork with profiles:', artworksWithProfiles);
+      setArtworks(artworksWithProfiles);
     } catch (error: any) {
       console.error('Error fetching artworks:', error);
       toast({
@@ -112,6 +124,7 @@ const SuperAdminPage = () => {
           </CardHeader>
           <CardContent>
             <p>You don't have permission to access the admin panel.</p>
+            <p className="text-sm text-gray-500 mt-2">Current email: {user.email}</p>
           </CardContent>
         </Card>
       </div>
@@ -135,6 +148,7 @@ const SuperAdminPage = () => {
             Super Admin Panel
           </h1>
           <p className="text-gray-600">Manage all artwork submissions across the platform</p>
+          <p className="text-sm text-gray-500">Logged in as: {user.email}</p>
         </div>
 
         <div className="mb-6">
@@ -194,14 +208,14 @@ const SuperAdminPage = () => {
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-gray-500" />
                     <span className="font-medium">
-                      {artwork.profiles?.artist_name || 'Unknown Artist'}
+                      {artwork.artist_name || 'Unknown Artist'}
                     </span>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500">Email:</span>
                     <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-                      {artwork.profiles?.email || 'No email'}
+                      {artwork.user_email || 'No email'}
                     </span>
                   </div>
                   
