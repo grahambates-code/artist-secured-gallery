@@ -1,4 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +28,7 @@ interface ArtworkWithProfile {
 const SuperAdminPage = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [artworks, setArtworks] = useState<ArtworkWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -130,6 +133,7 @@ const SuperAdminPage = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
+      navigate('/');
       toast({
         title: "Signed out successfully",
         description: "You have been signed out of your account"
