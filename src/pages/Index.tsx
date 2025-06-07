@@ -1,11 +1,10 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import UserProfile from '@/components/auth/UserProfile';
-import { Palette, Heart, Share2, Upload, Shield } from 'lucide-react';
+import { Palette, Heart, Share2, Upload, Shield, Mail } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -13,7 +12,7 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch user's recent artwork
+  // Fetch user's recent artwork with profile information
   const { data: recentArtwork, isLoading: artworkLoading } = useQuery({
     queryKey: ['user-recent-artwork', user?.id],
     queryFn: async () => {
@@ -21,7 +20,16 @@ const Index = () => {
       
       const { data, error } = await supabase
         .from('artwork')
-        .select('id, title, created_at, image_url')
+        .select(`
+          id, 
+          title, 
+          created_at, 
+          image_url,
+          profiles!inner (
+            email,
+            artist_name
+          )
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(5);
@@ -189,6 +197,12 @@ const Index = () => {
                       <p className="text-sm text-gray-500">
                         Uploaded {new Date(artwork.created_at).toLocaleDateString()}
                       </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Mail className="h-3 w-3 text-gray-400" />
+                        <span className="text-xs text-gray-500 font-mono">
+                          {artwork.profiles?.email || 'No email'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
