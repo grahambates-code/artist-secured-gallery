@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Calendar, Palette, User } from 'lucide-react';
 
 interface Artwork {
   id: string;
@@ -79,33 +80,62 @@ const ArtworkGrid = ({ artworks, onArtworkClick }: ArtworkGridProps) => {
                     <img 
                       src={artwork.image_url} 
                       alt={artwork.title}
-                      className="w-full h-64 object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-110"
+                      className="w-full h-64 object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-75"
                     />
                     
-                    {/* Gradient overlay that appears on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    
-                    {/* Elegant title overlay with slide-up animation */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-out">
-                      <div className="space-y-2">
-                        <h3 className="font-light tracking-wide text-foreground text-xl leading-tight">{artwork.title}</h3>
-                        <div className="flex items-center gap-3 text-sm">
-                          {artwork.year && (
-                            <span className="text-muted-foreground font-light bg-background/60 backdrop-blur-sm px-2 py-1 rounded">
-                              {artwork.year}
+                    {/* Enhanced hover overlay with detailed information */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/80 to-background/20 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out">
+                      <div className="absolute inset-0 p-6 flex flex-col justify-between">
+                        {/* Top section - Artist info */}
+                        <div className="transform -translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                            <User className="h-3 w-3" />
+                            <span className="bg-background/60 backdrop-blur-sm px-2 py-1 rounded">
+                              {artwork.profiles?.artist_name || artwork.profiles?.email?.split('@')[0] || 'Unknown Artist'}
                             </span>
-                          )}
-                          {artwork.medium && (
-                            <span className="text-muted-foreground font-light bg-background/60 backdrop-blur-sm px-2 py-1 rounded">
-                              {artwork.medium}
-                            </span>
-                          )}
+                          </div>
+                        </div>
+
+                        {/* Bottom section - Artwork details */}
+                        <div className="transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-200">
+                          <div className="space-y-3">
+                            <h3 className="font-light tracking-wide text-foreground text-xl leading-tight">
+                              {artwork.title}
+                            </h3>
+                            
+                            {artwork.description && (
+                              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 bg-background/60 backdrop-blur-sm p-2 rounded">
+                                {artwork.description}
+                              </p>
+                            )}
+                            
+                            <div className="flex flex-wrap gap-2 text-xs">
+                              {artwork.year && (
+                                <div className="flex items-center gap-1 text-muted-foreground bg-background/60 backdrop-blur-sm px-2 py-1 rounded">
+                                  <Calendar className="h-3 w-3" />
+                                  <span>{artwork.year}</span>
+                                </div>
+                              )}
+                              {artwork.medium && (
+                                <div className="flex items-center gap-1 text-muted-foreground bg-background/60 backdrop-blur-sm px-2 py-1 rounded">
+                                  <Palette className="h-3 w-3" />
+                                  <span>{artwork.medium}</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="text-xs text-muted-foreground">
+                              <span className="bg-background/60 backdrop-blur-sm px-2 py-1 rounded">
+                                Uploaded {new Date(artwork.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Subtle corner accent that appears on hover */}
-                    <div className="absolute top-4 right-4 w-0 h-0 border-l-2 border-b-2 border-foreground opacity-0 group-hover:opacity-60 group-hover:w-4 group-hover:h-4 transition-all duration-300 ease-out"></div>
+                    {/* Elegant corner accent */}
+                    <div className="absolute top-4 right-4 w-0 h-0 border-l-2 border-b-2 border-foreground opacity-0 group-hover:opacity-60 group-hover:w-4 group-hover:h-4 transition-all duration-300 ease-out delay-300"></div>
                   </div>
                 </div>
               </div>
