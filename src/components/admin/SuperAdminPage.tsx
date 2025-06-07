@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Image as ImageIcon, User, Calendar, Mail, Trash2 } from 'lucide-react';
+import { Shield, Image as ImageIcon, User, Calendar, Mail, Trash2, LogOut } from 'lucide-react';
 
 interface ArtworkWithProfile {
   id: string;
@@ -25,7 +24,7 @@ interface ArtworkWithProfile {
 }
 
 const SuperAdminPage = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
   const [artworks, setArtworks] = useState<ArtworkWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,6 +127,22 @@ const SuperAdminPage = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Sign out failed",
+        description: error.message || "An error occurred during sign out",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -166,13 +181,23 @@ const SuperAdminPage = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-light tracking-[0.3em] flex items-center gap-2 mb-2 text-foreground">
-            <Shield className="h-8 w-8 text-accent-foreground" />
-            SUPER ADMIN PANEL
-          </h1>
-          <p className="text-muted-foreground font-light tracking-wide">Manage all artwork submissions across the platform</p>
-          <p className="text-sm text-muted-foreground font-light">Logged in as: {user.email}</p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-light tracking-[0.3em] flex items-center gap-2 mb-2 text-foreground">
+              <Shield className="h-8 w-8 text-accent-foreground" />
+              SUPER ADMIN PANEL
+            </h1>
+            <p className="text-muted-foreground font-light tracking-wide">Manage all artwork submissions across the platform</p>
+            <p className="text-sm text-muted-foreground font-light">Logged in as: {user.email}</p>
+          </div>
+          <Button 
+            onClick={handleSignOut}
+            variant="outline"
+            className="flex items-center gap-2 font-light tracking-wide"
+          >
+            <LogOut className="h-4 w-4" />
+            SIGN OUT
+          </Button>
         </div>
 
         <div className="mb-6">
