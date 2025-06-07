@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 
 interface Artwork {
   id: string;
@@ -70,51 +69,46 @@ const ArtworkGrid = ({ artworks, onArtworkClick }: ArtworkGridProps) => {
           {/* Artwork Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {artistWorks.map((artwork) => (
-              <HoverCard key={artwork.id} openDelay={200} closeDelay={100}>
-                <HoverCardTrigger asChild>
-                  <div 
-                    className="group cursor-pointer transition-all duration-300 hover:scale-[1.02]"
-                    onClick={() => onArtworkClick(artwork)}
-                  >
-                    <div className="relative overflow-hidden bg-card border border-border">
-                      <img 
-                        src={artwork.image_url} 
-                        alt={artwork.title}
-                        className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-background/0 group-hover:bg-background/20 transition-colors duration-300"></div>
-                      
-                      {/* Title overlay on hover */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                        <h3 className="font-light tracking-wide text-foreground text-lg">{artwork.title}</h3>
-                        {artwork.year && (
-                          <p className="text-muted-foreground text-sm font-light">{artwork.year}</p>
-                        )}
+              <div 
+                key={artwork.id}
+                className="group cursor-pointer transition-all duration-500 ease-out hover:scale-[1.03] hover:shadow-2xl hover:shadow-foreground/20"
+                onClick={() => onArtworkClick(artwork)}
+              >
+                <div className="relative overflow-hidden bg-card border border-border transition-all duration-500 hover:border-foreground/30">
+                  <div className="relative overflow-hidden">
+                    <img 
+                      src={artwork.image_url} 
+                      alt={artwork.title}
+                      className="w-full h-64 object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-110"
+                    />
+                    
+                    {/* Gradient overlay that appears on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    {/* Elegant title overlay with slide-up animation */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-out">
+                      <div className="space-y-2">
+                        <h3 className="font-light tracking-wide text-foreground text-xl leading-tight">{artwork.title}</h3>
+                        <div className="flex items-center gap-3 text-sm">
+                          {artwork.year && (
+                            <span className="text-muted-foreground font-light bg-background/60 backdrop-blur-sm px-2 py-1 rounded">
+                              {artwork.year}
+                            </span>
+                          )}
+                          {artwork.medium && (
+                            <span className="text-muted-foreground font-light bg-background/60 backdrop-blur-sm px-2 py-1 rounded">
+                              {artwork.medium}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
+
+                    {/* Subtle corner accent that appears on hover */}
+                    <div className="absolute top-4 right-4 w-0 h-0 border-l-2 border-b-2 border-foreground opacity-0 group-hover:opacity-60 group-hover:w-4 group-hover:h-4 transition-all duration-300 ease-out"></div>
                   </div>
-                </HoverCardTrigger>
-                
-                <HoverCardContent 
-                  side="top" 
-                  className="w-80 bg-card border border-border p-4"
-                >
-                  <div className="space-y-3">
-                    <h3 className="font-light tracking-wide text-foreground">{artwork.title}</h3>
-                    {artwork.medium && (
-                      <p className="text-sm text-muted-foreground font-light">Medium: {artwork.medium}</p>
-                    )}
-                    {artwork.description && (
-                      <p className="text-sm text-muted-foreground font-light leading-relaxed">
-                        {artwork.description}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground font-light">
-                      {new Date(artwork.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </HoverCardContent>
-              </HoverCard>
+                </div>
+              </div>
             ))}
           </div>
         </div>
