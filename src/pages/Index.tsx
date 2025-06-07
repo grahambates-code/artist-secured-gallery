@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import UserProfile from '@/components/auth/UserProfile';
 import ArtworkUploadPanel from '@/components/artwork/ArtworkUploadPanel';
 import ArtworkViewPanel from '@/components/artwork/ArtworkViewPanel';
 import ArtworkGrid from '@/components/artwork/ArtworkGrid';
-import { Upload, Shield, LogIn } from 'lucide-react';
+import { Upload, Shield } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -145,13 +144,12 @@ const Index = () => {
                 <UserProfile />
               </>
             ) : (
-              <Button 
+              <button 
                 onClick={handleSignInClick}
-                className="gallery-button flex items-center gap-3 px-6 py-2 font-light tracking-wide"
+                className="text-muted-foreground hover:text-foreground transition-colors font-light tracking-wide text-sm underline-offset-4 hover:underline"
               >
-                <LogIn className="h-4 w-4" />
-                SIGN IN
-              </Button>
+                Artist Sign in
+              </button>
             )}
           </div>
         </div>
