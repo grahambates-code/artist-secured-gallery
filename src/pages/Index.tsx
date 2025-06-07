@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -120,9 +119,14 @@ const Index = () => {
       {/* Header */}
       <header className="gallery-header">
         <div className="container mx-auto px-6 py-6 flex justify-between items-center">
-          <h1 className="text-2xl font-light tracking-wide text-foreground">
-            GALLERY
-          </h1>
+          <div className="text-center flex-1">
+            <h1 className="text-3xl font-light tracking-[0.3em] text-foreground mb-1">
+              GALLERY
+            </h1>
+            <p className="text-xs font-light tracking-[0.2em] text-muted-foreground uppercase">
+              Curated Digital Art Space
+            </p>
+          </div>
           <div className="flex items-center gap-6">
             <Button 
               onClick={() => setUploadPanelOpen(true)} 
@@ -171,16 +175,8 @@ const Index = () => {
           </Card>
         )}
 
-        {/* Gallery Section */}
+        {/* Gallery Section - Main Content */}
         <div className="mb-16">
-          <div className="flex items-center gap-4 mb-12">
-            <div className="w-3 h-3 border border-foreground"></div>
-            <h2 className="text-3xl font-light tracking-[0.2em] text-foreground uppercase">
-              FEATURED COLLECTIONS
-            </h2>
-            <div className="flex-1 h-px bg-border"></div>
-          </div>
-
           {artworkLoading ? (
             <div className="flex items-center justify-center py-24">
               <div className="animate-spin w-8 h-8 border-2 border-foreground border-t-transparent"></div>
@@ -195,47 +191,6 @@ const Index = () => {
             </div>
           )}
         </div>
-
-        {/* Recent Activity - Only show if user has artwork */}
-        {recentArtwork && recentArtwork.length > 0 && (
-          <Card className="gallery-card">
-            <CardHeader>
-              <CardTitle className="text-foreground font-light tracking-wide">YOUR RECENT ACTIVITY</CardTitle>
-              <CardDescription className="text-muted-foreground font-light">
-                Your latest submissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {recentLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin w-6 h-6 border-2 border-foreground border-t-transparent"></div>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {recentArtwork.map((artwork) => (
-                    <div 
-                      key={artwork.id} 
-                      className="flex items-center gap-6 p-4 border-b border-border last:border-b-0 hover:bg-accent/50 transition-colors cursor-pointer"
-                      onClick={() => handleArtworkClick(artwork)}
-                    >
-                      <img 
-                        src={artwork.image_url} 
-                        alt={artwork.title}
-                        className="w-16 h-16 object-cover"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-light text-foreground tracking-wide">{artwork.title}</h3>
-                        <p className="text-sm text-muted-foreground font-light">
-                          {new Date(artwork.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
       </main>
 
       {/* Slide-in Panels */}
