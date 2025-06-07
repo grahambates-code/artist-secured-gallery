@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import UserProfile from '@/components/auth/UserProfile';
-import { Palette, Heart, Share2 } from 'lucide-react';
+import { Palette, Heart, Share2, Upload, Shield } from 'lucide-react';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -29,6 +29,8 @@ const Index = () => {
     return null; // Will redirect to auth page
   }
 
+  const isAdmin = user.email === 'mogmog@gmail.com';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
       {/* Header */}
@@ -37,7 +39,23 @@ const Index = () => {
           <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             Art Gallery
           </h1>
-          <UserProfile />
+          <div className="flex items-center gap-4">
+            <Button onClick={() => navigate('/upload')} className="flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Upload Art
+            </Button>
+            {isAdmin && (
+              <Button 
+                onClick={() => navigate('/admin')} 
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Shield className="h-4 w-4" />
+                Admin
+              </Button>
+            )}
+            <UserProfile />
+          </div>
         </div>
       </header>
 
@@ -63,7 +81,9 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">Upload Artwork</Button>
+              <Button className="w-full" onClick={() => navigate('/upload')}>
+                Upload Artwork
+              </Button>
             </CardContent>
           </Card>
 
@@ -93,6 +113,29 @@ const Index = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Admin Access */}
+        {isAdmin && (
+          <Card className="mb-12 border-yellow-200 bg-yellow-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-yellow-800">
+                <Shield className="h-5 w-5" />
+                Admin Access
+              </CardTitle>
+              <CardDescription className="text-yellow-700">
+                You have super admin privileges and can view all artwork submissions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => navigate('/admin')} 
+                className="bg-yellow-600 hover:bg-yellow-700"
+              >
+                Access Admin Panel
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Activity */}
         <Card>
