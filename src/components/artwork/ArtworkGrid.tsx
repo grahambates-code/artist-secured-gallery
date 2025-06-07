@@ -2,21 +2,36 @@
 import React from 'react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 
+interface Artwork {
+  id: string;
+  title: string;
+  image_url: string;
+  description?: string;
+  medium?: string;
+  year?: number;
+  created_at: string;
+  user_id: string;
+  profiles?: {
+    email: string;
+    artist_name?: string;
+  };
+}
+
 interface ArtworkGridProps {
-  artworks: any[];
-  onArtworkClick: (artwork: any) => void;
+  artworks: Artwork[];
+  onArtworkClick: (artwork: Artwork) => void;
 }
 
 const ArtworkGrid = ({ artworks, onArtworkClick }: ArtworkGridProps) => {
   // Group artworks by artist email
-  const groupedArtworks = artworks.reduce((groups, artwork) => {
+  const groupedArtworks = artworks.reduce((groups: Record<string, Artwork[]>, artwork) => {
     const artistEmail = artwork.profiles?.email || 'Unknown Artist';
     if (!groups[artistEmail]) {
       groups[artistEmail] = [];
     }
     groups[artistEmail].push(artwork);
     return groups;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, Artwork[]>);
 
   // Generate artist bios
   const getArtistBio = (email: string, artworkCount: number) => {
