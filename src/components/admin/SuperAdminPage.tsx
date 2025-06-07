@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Image as ImageIcon, User, Calendar } from 'lucide-react';
+import { Shield, Image as ImageIcon, User, Calendar, Mail } from 'lucide-react';
 
 interface ArtworkWithProfile {
   id: string;
@@ -60,13 +60,13 @@ const SuperAdminPage = () => {
 
   const fetchAllArtworks = async () => {
     try {
-      console.log('Fetching all artworks with join...');
+      console.log('Fetching all artworks with inner join...');
       
       const { data, error } = await supabase
         .from('artwork')
         .select(`
           *,
-          profiles (
+          profiles!inner (
             email,
             artist_name
           )
@@ -75,7 +75,7 @@ const SuperAdminPage = () => {
 
       if (error) throw error;
 
-      console.log('Artwork data with profiles:', data);
+      console.log('Artwork data with profiles (inner join):', data);
       setArtworks(data || []);
     } catch (error: any) {
       console.error('Error fetching artworks:', error);
@@ -198,7 +198,7 @@ const SuperAdminPage = () => {
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500">Email:</span>
+                    <Mail className="h-4 w-4 text-gray-500" />
                     <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
                       {artwork.profiles?.email || 'No email'}
                     </span>
