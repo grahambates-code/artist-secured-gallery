@@ -158,13 +158,15 @@ const Index = () => {
           <div className="flex items-center gap-6">
             {user ? (
               <>
-                <Button 
-                  onClick={() => setUploadPanelOpen(true)} 
-                  className="gallery-button flex items-center gap-3 px-6 py-2 font-light tracking-wide"
-                >
-                  <Upload className="h-4 w-4" />
-                  UPLOAD
-                </Button>
+                {!isAdmin && (
+                  <Button 
+                    onClick={() => setUploadPanelOpen(true)} 
+                    className="gallery-button flex items-center gap-3 px-6 py-2 font-light tracking-wide"
+                  >
+                    <Upload className="h-4 w-4" />
+                    UPLOAD
+                  </Button>
+                )}
                 {isAdmin && (
                   <Button 
                     onClick={() => navigate('/admin')} 
@@ -232,8 +234,8 @@ const Index = () => {
         </div>
       </main>
 
-      {/* Slide-in Panels - Only show if user is authenticated */}
-      {user && (
+      {/* Slide-in Panels - Only show if user is authenticated and not admin */}
+      {user && !isAdmin && (
         <>
           <ArtworkUploadPanel 
             open={uploadPanelOpen} 

@@ -2,10 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Image as ImageIcon, User, Calendar, Mail } from 'lucide-react';
+import { Shield, Image as ImageIcon, User, Calendar, Mail, Trash2 } from 'lucide-react';
 
 interface ArtworkWithProfile {
   id: string;
@@ -29,6 +30,7 @@ const SuperAdminPage = () => {
   const [artworks, setArtworks] = useState<ArtworkWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     checkAdminStatus();
@@ -87,6 +89,42 @@ const SuperAdminPage = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteArtwork = async (artworkId: string, artworkTitle: string) => {
+    try {
+      setDeletingIds(prev => new Set(prev).add(artworkId));
+      
+      console.log('Deleting artwork:', artworkId);
+      
+      const { error } = await supabase
+        .from('artwork')
+        .delete()
+        .eq('id', artworkId);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setArtworks(prev => prev.filter(artwork => artwork.id !== artworkId));
+      
+      toast({
+        title: "Artwork deleted",
+        description: `"${artworkTitle}" has been successfully deleted`,
+      });
+    } catch (error: any) {
+      console.error('Error deleting artwork:', error);
+      toast({
+        title: "Error deleting artwork",
+        description: error.message || "Failed to delete artwork",
+        variant: "destructive"
+      });
+    } finally {
+      setDeletingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(artworkId);
+        return newSet;
+      });
     }
   };
 
@@ -178,6 +216,21 @@ const SuperAdminPage = () => {
                   <Badge variant={artwork.published ? "default" : "secondary"} className="font-light">
                     {artwork.published ? "Published" : "Draft"}
                   </Badge>
+                </div>
+                <div className="absolute top-2 left-2">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDeleteArtwork(artwork.id, artwork.title)}
+                    disabled={deletingIds.has(artwork.id)}
+                    className="h-8 w-8 p-0 font-light"
+                  >
+                    {deletingIds.has(artwork.id) ? (
+                      <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
+                    ) : (
+                      <Trash2 className="h-3 w-3" />
+                    )}
+                  </Button>
                 </div>
               </div>
               
