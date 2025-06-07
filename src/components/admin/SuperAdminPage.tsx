@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,8 +16,10 @@ interface ArtworkWithProfile {
   published: boolean;
   created_at: string;
   user_id: string;
-  user_email: string | null;
-  artist_name: string | null;
+  profiles: {
+    email: string | null;
+    artist_name: string | null;
+  } | null;
 }
 
 const SuperAdminPage = () => {
@@ -59,39 +60,23 @@ const SuperAdminPage = () => {
 
   const fetchAllArtworks = async () => {
     try {
-      console.log('Fetching all artworks...');
+      console.log('Fetching all artworks with join...');
       
-      // First get all artwork
-      const { data: artworkData, error: artworkError } = await supabase
+      const { data, error } = await supabase
         .from('artwork')
-        .select('*')
+        .select(`
+          *,
+          profiles (
+            email,
+            artist_name
+          )
+        `)
         .order('created_at', { ascending: false });
 
-      if (artworkError) throw artworkError;
+      if (error) throw error;
 
-      console.log('Artwork data:', artworkData);
-
-      // Then get all profiles
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, email, artist_name');
-
-      if (profilesError) throw profilesError;
-
-      console.log('Profiles data:', profilesData);
-
-      // Manually join the data
-      const artworksWithProfiles: ArtworkWithProfile[] = (artworkData || []).map(artwork => {
-        const profile = profilesData?.find(p => p.id === artwork.user_id);
-        return {
-          ...artwork,
-          user_email: profile?.email || null,
-          artist_name: profile?.artist_name || null
-        };
-      });
-
-      console.log('Merged artwork with profiles:', artworksWithProfiles);
-      setArtworks(artworksWithProfiles);
+      console.log('Artwork data with profiles:', data);
+      setArtworks(data || []);
     } catch (error: any) {
       console.error('Error fetching artworks:', error);
       toast({
@@ -208,14 +193,14 @@ const SuperAdminPage = () => {
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-gray-500" />
                     <span className="font-medium">
-                      {artwork.artist_name || 'Unknown Artist'}
+                      {artwork.profiles?.artist_name || 'Unknown Artist'}
                     </span>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500">Email:</span>
                     <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-                      {artwork.user_email || 'No email'}
+                      {artwork.profiles?.email || 'No email'}
                     </span>
                   </div>
                   
