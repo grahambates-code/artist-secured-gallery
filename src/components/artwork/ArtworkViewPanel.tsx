@@ -2,7 +2,22 @@
 import React from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Calendar, Palette } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
+import { Mail, Calendar, Palette, Trash2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Artwork {
   id: string;
@@ -12,6 +27,7 @@ interface Artwork {
   year: number | null;
   image_url: string;
   created_at: string;
+  user_id: string;
   profiles?: {
     email: string;
     artist_name: string | null;
@@ -22,19 +38,100 @@ interface ArtworkViewPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   artwork: Artwork | null;
+  onArtworkDeleted?: () => void;
 }
 
-const ArtworkViewPanel = ({ open, onOpenChange, artwork }: ArtworkViewPanelProps) => {
+const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted }: ArtworkViewPanelProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
   if (!artwork) return null;
+
+  const isOwner = user && user.id === artwork.user_id;
+
+  const handleDeleteArtwork = async () => {
+    if (!user || user.id !== artwork.user_id) {
+      toast({
+        title: "Permission denied",
+        description: "You can only delete your own artwork",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('artwork')
+        .delete()
+        .eq('id', artwork.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Artwork deleted",
+        description: `"${artwork.title}" has been successfully deleted`,
+      });
+
+      // Close the panel
+      onOpenChange(false);
+
+      // Trigger refresh of artwork list
+      if (onArtworkDeleted) {
+        onArtworkDeleted();
+      }
+    } catch (error: any) {
+      console.error('Error deleting artwork:', error);
+      toast({
+        title: "Error deleting artwork",
+        description: error.message || "Failed to delete artwork",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto bg-background border-l border-border">
         <SheetHeader>
-          <SheetTitle className="text-left font-light tracking-wide text-foreground">{artwork.title}</SheetTitle>
-          <SheetDescription className="text-left text-muted-foreground font-light">
-            Artwork details
-          </SheetDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <SheetTitle className="text-left font-light tracking-wide text-foreground">{artwork.title}</SheetTitle>
+              <SheetDescription className="text-left text-muted-foreground font-light">
+                Artwork details
+              </SheetDescription>
+            </div>
+            {isOwner && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Artwork</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{artwork.title}"? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteArtwork}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </SheetHeader>
         
         <div className="mt-8 space-y-8">

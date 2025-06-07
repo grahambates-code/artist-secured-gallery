@@ -94,6 +94,7 @@ const Index = () => {
         open={viewPanelOpen} 
         onOpenChange={setViewPanelOpen}
         artwork={selectedArtwork}
+        onArtworkDeleted={handleArtworkDeleted}
       />
     </div>
   );
