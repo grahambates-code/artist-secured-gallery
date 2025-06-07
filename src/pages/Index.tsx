@@ -114,7 +114,7 @@ const Index = () => {
       {/* Header */}
       <header className="gallery-header">
         <div className="container mx-auto px-6 py-6 flex justify-between items-center">
-          <div className="text-center flex-1">
+          <div className="text-left">
             <h1 className="text-3xl font-light tracking-[0.3em] text-foreground mb-1">
               GALLERY
             </h1>
