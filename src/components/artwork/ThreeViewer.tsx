@@ -148,10 +148,10 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
     color: '#00ff00'
   };
   
-  // Safe initialization - only spread if sceneData is an object
+  // Safe initialization - only spread if sceneData is a non-null object
   const [currentData, setCurrentData] = useState({
     ...defaultData,
-    ...(sceneData && typeof sceneData === 'object' ? sceneData : {})
+    ...(sceneData && typeof sceneData === 'object' && sceneData !== null ? sceneData : {})
   });
   
   const [isEditing, setIsEditing] = useState(false);
@@ -227,7 +227,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
   const handleCancel = () => {
     setCurrentData({
       ...defaultData,
-      ...(sceneData && typeof sceneData === 'object' ? sceneData : {})
+      ...(sceneData && typeof sceneData === 'object' && sceneData !== null ? sceneData : {})
     });
     setIsEditing(false);
   };
