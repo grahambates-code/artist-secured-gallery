@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import ImageCard from './ImageCard';
 import TextCard from './TextCard';
+import SimpleThreeCard from './SimpleThreeCard';
 
 interface Artwork {
   id: string;
@@ -105,6 +105,18 @@ const ArtworkGrid = ({ artworks, onArtworkClick, onArtworkDeleted }: ArtworkGrid
     if (artworkType === 'text') {
       return (
         <TextCard
+          key={artwork.id}
+          artwork={artwork}
+          canDelete={canDelete}
+          onClick={() => onArtworkClick(artwork)}
+          onDelete={(e) => handleDeleteArtwork(artwork, e)}
+        />
+      );
+    }
+
+    if (artworkType === 'threejs') {
+      return (
+        <SimpleThreeCard
           key={artwork.id}
           artwork={artwork}
           canDelete={canDelete}

@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Upload } from 'lucide-react';
 import ArtworkTypeSelector from './ArtworkTypeSelector';
 import TextArtworkForm from './TextArtworkForm';
+import ThreeArtworkForm from './ThreeArtworkForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,7 @@ interface ArtworkUploadPanelProps {
 }
 
 const ArtworkUploadPanel = ({ open, onOpenChange, onUploadSuccess }: ArtworkUploadPanelProps) => {
-  const [selectedType, setSelectedType] = useState<'image' | 'text' | null>(null);
+  const [selectedType, setSelectedType] = useState<'image' | 'text' | 'threejs' | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const [title, setTitle] = useState('');
@@ -117,7 +117,7 @@ const ArtworkUploadPanel = ({ open, onOpenChange, onUploadSuccess }: ArtworkUplo
     }
   };
 
-  const handleTypeSelect = (type: 'image' | 'text') => {
+  const handleTypeSelect = (type: 'image' | 'text' | 'threejs') => {
     setSelectedType(type);
   };
 
@@ -158,6 +158,13 @@ const ArtworkUploadPanel = ({ open, onOpenChange, onUploadSuccess }: ArtworkUplo
           
           {selectedType === 'text' && (
             <TextArtworkForm 
+              onBack={handleBack}
+              onSuccess={handleSuccess}
+            />
+          )}
+          
+          {selectedType === 'threejs' && (
+            <ThreeArtworkForm 
               onBack={handleBack}
               onSuccess={handleSuccess}
             />

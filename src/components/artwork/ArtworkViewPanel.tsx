@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
@@ -14,10 +13,11 @@ import {
   AlertDialogTitle, 
   AlertDialogTrigger 
 } from '@/components/ui/alert-dialog';
-import { Mail, Calendar, Palette, Trash2, FileText } from 'lucide-react';
+import { Mail, Calendar, Palette, Trash2, FileText, Box } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import ThreeViewer from './ThreeViewer';
 
 interface Artwork {
   id: string;
@@ -52,6 +52,7 @@ const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted }: Art
   const artworkType = artwork.type || 'image';
   const imageUrl = artwork.content?.image_url;
   const textContent = artwork.content?.text;
+  const threeData = artwork.content;
 
   const handleDeleteArtwork = async () => {
     if (!user || user.id !== artwork.user_id) {
@@ -158,6 +159,17 @@ const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted }: Art
                     {textContent}
                   </p>
                 </div>
+              </div>
+            ) : artworkType === 'threejs' && threeData ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Box className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground font-medium">Interactive 3D Scene</span>
+                </div>
+                <ThreeViewer sceneData={threeData} />
+                <p className="text-sm text-muted-foreground">
+                  Use your mouse to rotate and interact with the 3D scene
+                </p>
               </div>
             ) : null}
           </div>
