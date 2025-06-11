@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -148,10 +147,15 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
     color: '#00ff00'
   };
   
-  // Safe initialization - only spread if sceneData is a non-null object
+  // Safe initialization with explicit type checking
+  const isValidSceneData = sceneData && 
+    typeof sceneData === 'object' && 
+    sceneData !== null && 
+    !Array.isArray(sceneData);
+    
   const [currentData, setCurrentData] = useState({
     ...defaultData,
-    ...(sceneData && typeof sceneData === 'object' && sceneData !== null ? sceneData : {})
+    ...(isValidSceneData ? sceneData : {})
   });
   
   const [isEditing, setIsEditing] = useState(false);
@@ -227,7 +231,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
   const handleCancel = () => {
     setCurrentData({
       ...defaultData,
-      ...(sceneData && typeof sceneData === 'object' && sceneData !== null ? sceneData : {})
+      ...(isValidSceneData ? sceneData : {})
     });
     setIsEditing(false);
   };
@@ -464,3 +468,5 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
 };
 
 export default ThreeViewer;
+
+}
