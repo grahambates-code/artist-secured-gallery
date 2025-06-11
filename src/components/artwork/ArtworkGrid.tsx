@@ -1,21 +1,23 @@
 
 import React from 'react';
-import { Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import ImageCard from './ImageCard';
+import TextCard from './TextCard';
 
 interface Artwork {
   id: string;
   title: string;
-  image_url: string;
+  image_url?: string;
   description?: string;
   medium?: string;
   year?: number;
   created_at: string;
   user_id: string;
   published?: boolean;
+  type?: string;
+  content?: any;
   profiles?: {
     email: string;
     artist_name?: string;
@@ -97,6 +99,34 @@ const ArtworkGrid = ({ artworks, onArtworkClick, onArtworkDeleted }: ArtworkGrid
     return bios[index];
   };
 
+  const renderArtworkCard = (artwork: Artwork) => {
+    const canDelete = user && user.id === artwork.user_id;
+    const artworkType = artwork.type || 'image'; // Default to 'image' for backward compatibility
+
+    if (artworkType === 'text') {
+      return (
+        <TextCard
+          key={artwork.id}
+          artwork={artwork}
+          canDelete={canDelete}
+          onClick={() => onArtworkClick(artwork)}
+          onDelete={(e) => handleDeleteArtwork(artwork, e)}
+        />
+      );
+    }
+
+    // Default to image card for 'image' type or any other type
+    return (
+      <ImageCard
+        key={artwork.id}
+        artwork={artwork}
+        canDelete={canDelete}
+        onClick={() => onArtworkClick(artwork)}
+        onDelete={(e) => handleDeleteArtwork(artwork, e)}
+      />
+    );
+  };
+
   return (
     <div className="space-y-16">
       {Object.entries(groupedArtworks).map(([artistEmail, artistWorks]) => (
@@ -117,40 +147,7 @@ const ArtworkGrid = ({ artworks, onArtworkClick, onArtworkDeleted }: ArtworkGrid
 
           {/* Artwork Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {artistWorks.map((artwork) => (
-              <div 
-                key={artwork.id}
-                className="group cursor-pointer relative"
-                onClick={() => onArtworkClick(artwork)}
-              >
-                <div className="relative overflow-hidden bg-card border border-border transition-all duration-300 hover:border-foreground">
-                  <div className="relative overflow-hidden">
-                    <img 
-                      src={artwork.image_url} 
-                      alt={artwork.title}
-                      className="w-full h-64 object-cover transition-all duration-500 ease-out group-hover:scale-[1.02] group-hover:contrast-110"
-                    />
-                    
-                    {/* Delete button - only show for artwork owner */}
-                    {user && user.id === artwork.user_id && (
-                      <div className="absolute top-3 right-3 z-10">
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={(e) => handleDeleteArtwork(artwork, e)}
-                          className="h-8 w-8 p-0 bg-destructive/90 hover:bg-destructive backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* Minimal corner indicator */}
-                    <div className="absolute top-6 right-6 w-0 h-0 border-l border-b border-foreground/0 group-hover:border-foreground/60 group-hover:w-3 group-hover:h-3 transition-all duration-200 ease-out delay-200 pointer-events-none"></div>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {artistWorks.map(renderArtworkCard)}
           </div>
         </div>
       ))}

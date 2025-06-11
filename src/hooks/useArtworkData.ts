@@ -21,6 +21,8 @@ export const useArtworkData = (user: User | null) => {
             year,
             user_id,
             published,
+            type,
+            content,
             profiles!inner (
               email,
               artist_name
@@ -48,6 +50,8 @@ export const useArtworkData = (user: User | null) => {
             medium,
             year,
             user_id,
+            type,
+            content,
             profiles!inner (
               email,
               artist_name

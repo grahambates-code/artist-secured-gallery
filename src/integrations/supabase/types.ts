@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       artwork: {
         Row: {
+          content: Json | null
           created_at: string
           description: string | null
           id: string
@@ -18,11 +19,13 @@ export type Database = {
           medium: string | null
           published: boolean
           title: string
+          type: string
           updated_at: string
           user_id: string
           year: number | null
         }
         Insert: {
+          content?: Json | null
           created_at?: string
           description?: string | null
           id?: string
@@ -30,11 +33,13 @@ export type Database = {
           medium?: string | null
           published?: boolean
           title: string
+          type?: string
           updated_at?: string
           user_id: string
           year?: number | null
         }
         Update: {
+          content?: Json | null
           created_at?: string
           description?: string | null
           id?: string
@@ -42,6 +47,7 @@ export type Database = {
           medium?: string | null
           published?: boolean
           title?: string
+          type?: string
           updated_at?: string
           user_id?: string
           year?: number | null
