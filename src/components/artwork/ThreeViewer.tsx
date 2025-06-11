@@ -262,8 +262,8 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
 
   return (
     <div className="space-y-4">
-      <AspectRatio ratio={4/3} className="border border-border rounded-lg overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 relative">
-        <Canvas camera={{ position: [0, 0, 5], fov: 75, aspect: 4/3 }}>
+      <AspectRatio ratio={1} className="border border-border rounded-lg overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 relative">
+        <Canvas camera={{ position: [0, 0, 5], fov: 75, aspect: 1 }}>
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} />
           
@@ -290,145 +290,143 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
         </Canvas>
 
         {/* Overlay Controls */}
-        {showSliders && (
-          <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm p-4 rounded-lg space-y-4 max-w-xs">
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold">Position</Label>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs w-4">X:</span>
-                  <Slider
-                    value={[currentData.position.x]}
-                    onValueChange={(value) => handleSliderChange('position', 'x', value)}
-                    min={-5}
-                    max={5}
-                    step={0.1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs w-12">{currentData.position.x.toFixed(1)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs w-4">Y:</span>
-                  <Slider
-                    value={[currentData.position.y]}
-                    onValueChange={(value) => handleSliderChange('position', 'y', value)}
-                    min={-3}
-                    max={3}
-                    step={0.1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs w-12">{currentData.position.y.toFixed(1)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs w-4">Z:</span>
-                  <Slider
-                    value={[currentData.position.z]}
-                    onValueChange={(value) => handleSliderChange('position', 'z', value)}
-                    min={-2}
-                    max={2}
-                    step={0.1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs w-12">{currentData.position.z.toFixed(1)}</span>
-                </div>
+        <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm p-4 rounded-lg space-y-4 max-w-xs">
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold">Position</Label>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs w-4">X:</span>
+                <Slider
+                  value={[currentData.position.x]}
+                  onValueChange={(value) => handleSliderChange('position', 'x', value)}
+                  min={-5}
+                  max={5}
+                  step={0.1}
+                  className="flex-1"
+                />
+                <span className="text-xs w-12">{currentData.position.x.toFixed(1)}</span>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold">Rotation</Label>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs w-4">X:</span>
-                  <Slider
-                    value={[currentData.rotation.x]}
-                    onValueChange={(value) => handleSliderChange('rotation', 'x', value)}
-                    min={0}
-                    max={Math.PI * 2}
-                    step={0.1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs w-12">{currentData.rotation.x.toFixed(1)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs w-4">Y:</span>
-                  <Slider
-                    value={[currentData.rotation.y]}
-                    onValueChange={(value) => handleSliderChange('rotation', 'y', value)}
-                    min={0}
-                    max={Math.PI * 2}
-                    step={0.1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs w-12">{currentData.rotation.y.toFixed(1)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs w-4">Z:</span>
-                  <Slider
-                    value={[currentData.rotation.z]}
-                    onValueChange={(value) => handleSliderChange('rotation', 'z', value)}
-                    min={0}
-                    max={Math.PI * 2}
-                    step={0.1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs w-12">{currentData.rotation.z.toFixed(1)}</span>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs w-4">Y:</span>
+                <Slider
+                  value={[currentData.position.y]}
+                  onValueChange={(value) => handleSliderChange('position', 'y', value)}
+                  min={-3}
+                  max={3}
+                  step={0.1}
+                  className="flex-1"
+                />
+                <span className="text-xs w-12">{currentData.position.y.toFixed(1)}</span>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold">Scale</Label>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs w-4">X:</span>
-                  <Slider
-                    value={[(currentData.scale?.x || 1)]}
-                    onValueChange={(value) => handleSliderChange('scale', 'x', value)}
-                    min={0.1}
-                    max={3}
-                    step={0.1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs w-12">{(currentData.scale?.x || 1).toFixed(1)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs w-4">Y:</span>
-                  <Slider
-                    value={[(currentData.scale?.y || 1)]}
-                    onValueChange={(value) => handleSliderChange('scale', 'y', value)}
-                    min={0.1}
-                    max={3}
-                    step={0.1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs w-12">{(currentData.scale?.y || 1).toFixed(1)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs w-4">Z:</span>
-                  <Slider
-                    value={[(currentData.scale?.z || 1)]}
-                    onValueChange={(value) => handleSliderChange('scale', 'z', value)}
-                    min={0.1}
-                    max={3}
-                    step={0.1}
-                    className="flex-1"
-                  />
-                  <span className="text-xs w-12">{(currentData.scale?.z || 1).toFixed(1)}</span>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs w-4">Z:</span>
+                <Slider
+                  value={[currentData.position.z]}
+                  onValueChange={(value) => handleSliderChange('position', 'z', value)}
+                  min={-2}
+                  max={2}
+                  step={0.1}
+                  className="flex-1"
+                />
+                <span className="text-xs w-12">{currentData.position.z.toFixed(1)}</span>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold">Color</Label>
-              <input
-                type="color"
-                value={currentData.color}
-                onChange={(e) => handleColorChange(e.target.value)}
-                className="w-full h-8 rounded border border-border"
-              />
             </div>
           </div>
-        )}
+
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold">Rotation</Label>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs w-4">X:</span>
+                <Slider
+                  value={[currentData.rotation.x]}
+                  onValueChange={(value) => handleSliderChange('rotation', 'x', value)}
+                  min={0}
+                  max={Math.PI * 2}
+                  step={0.1}
+                  className="flex-1"
+                />
+                <span className="text-xs w-12">{currentData.rotation.x.toFixed(1)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs w-4">Y:</span>
+                <Slider
+                  value={[currentData.rotation.y]}
+                  onValueChange={(value) => handleSliderChange('rotation', 'y', value)}
+                  min={0}
+                  max={Math.PI * 2}
+                  step={0.1}
+                  className="flex-1"
+                />
+                <span className="text-xs w-12">{currentData.rotation.y.toFixed(1)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs w-4">Z:</span>
+                <Slider
+                  value={[currentData.rotation.z]}
+                  onValueChange={(value) => handleSliderChange('rotation', 'z', value)}
+                  min={0}
+                  max={Math.PI * 2}
+                  step={0.1}
+                  className="flex-1"
+                />
+                <span className="text-xs w-12">{currentData.rotation.z.toFixed(1)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold">Scale</Label>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs w-4">X:</span>
+                <Slider
+                  value={[(currentData.scale?.x || 1)]}
+                  onValueChange={(value) => handleSliderChange('scale', 'x', value)}
+                  min={0.1}
+                  max={3}
+                  step={0.1}
+                  className="flex-1"
+                />
+                <span className="text-xs w-12">{(currentData.scale?.x || 1).toFixed(1)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs w-4">Y:</span>
+                <Slider
+                  value={[(currentData.scale?.y || 1)]}
+                  onValueChange={(value) => handleSliderChange('scale', 'y', value)}
+                  min={0.1}
+                  max={3}
+                  step={0.1}
+                  className="flex-1"
+                />
+                <span className="text-xs w-12">{(currentData.scale?.y || 1).toFixed(1)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs w-4">Z:</span>
+                <Slider
+                  value={[(currentData.scale?.z || 1)]}
+                  onValueChange={(value) => handleSliderChange('scale', 'z', value)}
+                  min={0.1}
+                  max={3}
+                  step={0.1}
+                  className="flex-1"
+                />
+                <span className="text-xs w-12">{(currentData.scale?.z || 1).toFixed(1)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold">Color</Label>
+            <input
+              type="color"
+              value={currentData.color}
+              onChange={(e) => handleColorChange(e.target.value)}
+              className="w-full h-8 rounded border border-border"
+            />
+          </div>
+        </div>
       </AspectRatio>
 
       {canEdit && user && (

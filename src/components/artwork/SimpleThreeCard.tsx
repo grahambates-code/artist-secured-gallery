@@ -45,10 +45,10 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
       className="gallery-card group cursor-pointer hover:bg-accent/50 transition-colors relative"
       onClick={onClick}
     >
-      <AspectRatio ratio={4/3} className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
-        {/* Static Three.js scene preview with consistent aspect ratio */}
+      <AspectRatio ratio={1} className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
+        {/* Static Three.js scene preview with square aspect ratio */}
         <div className="w-full h-full">
-          <Canvas camera={{ position: [0, 0, 5], fov: 75, aspect: 4/3 }}>
+          <Canvas camera={{ position: [0, 0, 5], fov: 75, aspect: 1 }}>
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} />
             <PreviewCube 
