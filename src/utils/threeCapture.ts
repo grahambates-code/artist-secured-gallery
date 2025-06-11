@@ -15,14 +15,20 @@ export const captureThreeScene = async (
   height: number = 512
 ): Promise<string> => {
   return renderQueue.add(async () => {
-    // Create off-screen renderer
+    // Create off-screen renderer with better color preservation
     const renderer = new THREE.WebGLRenderer({
-      antialias: false,
+      antialias: true,
       preserveDrawingBuffer: true,
-      powerPreference: "low-power"
+      powerPreference: "high-performance",
+      alpha: false
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(1); // Fixed pixel ratio for consistency
+    renderer.setPixelRatio(1);
+    
+    // Enable better color output
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.NoToneMapping;
+    renderer.toneMappingExposure = 1.0;
     
     try {
       // Create scene
@@ -33,20 +39,29 @@ export const captureThreeScene = async (
       const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
       camera.position.set(0, 0, 5);
       
-      // Add lighting
-      const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+      // Add brighter lighting to ensure colors show properly
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
       scene.add(ambientLight);
       
-      const pointLight = new THREE.PointLight(0xffffff, 1, 0);
-      pointLight.position.set(10, 10, 10);
+      const pointLight = new THREE.PointLight(0xffffff, 1.2, 0);
+      pointLight.position.set(5, 5, 5);
       scene.add(pointLight);
+      
+      // Add a second light from the opposite side
+      const pointLight2 = new THREE.PointLight(0xffffff, 0.8, 0);
+      pointLight2.position.set(-5, -5, 5);
+      scene.add(pointLight2);
       
       // Create cube with proper color handling
       const geometry = new THREE.BoxGeometry(2, 2, 2);
       
-      // Convert color string to Three.js Color object
+      // Convert color string to Three.js Color object and ensure it's bright
       const color = new THREE.Color(threeData.color);
-      const material = new THREE.MeshStandardMaterial({ color: color });
+      const material = new THREE.MeshStandardMaterial({ 
+        color: color,
+        metalness: 0.1,
+        roughness: 0.4
+      });
       
       const cube = new THREE.Mesh(geometry, material);
       
@@ -61,11 +76,12 @@ export const captureThreeScene = async (
       cube.rotation.x += 0.3;
       cube.rotation.y += 0.3;
       
-      // Render scene
+      // Render scene multiple times to ensure proper color output
+      renderer.render(scene, camera);
       renderer.render(scene, camera);
       
-      // Capture as data URL
-      const dataURL = renderer.domElement.toDataURL('image/png', 0.8);
+      // Capture as data URL with maximum quality
+      const dataURL = renderer.domElement.toDataURL('image/png', 1.0);
       
       // Clean up
       geometry.dispose();
