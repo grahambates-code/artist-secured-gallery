@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -5,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import PreviewCube from './PreviewCube';
 import * as THREE from 'three';
 
@@ -110,6 +112,7 @@ const InteractiveCube = ({ color, position, rotation }: {
 const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: ThreeViewerProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [currentData, setCurrentData] = useState({
     position: { x: 0, y: 0, z: 0 },
     rotation: { x: 0, y: 0, z: 0 },
@@ -144,6 +147,9 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
         title: "Scene updated!",
         description: "Your 3D scene changes have been saved"
       });
+
+      // Invalidate and refetch artwork data
+      queryClient.invalidateQueries({ queryKey: ['artwork'] });
 
       setIsEditing(false);
       if (onSceneUpdate) {
