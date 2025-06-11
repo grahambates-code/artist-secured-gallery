@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
@@ -166,10 +167,15 @@ const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted }: Art
                   <Box className="h-5 w-5 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground font-medium">Interactive 3D Scene</span>
                 </div>
-                <ThreeViewer sceneData={threeData} />
-                <p className="text-sm text-muted-foreground">
-                  Use your mouse to rotate and interact with the 3D scene
-                </p>
+                <ThreeViewer 
+                  sceneData={threeData} 
+                  artworkId={artwork.id}
+                  canEdit={isOwner}
+                  onSceneUpdate={(newData) => {
+                    // Update the artwork object with new data
+                    artwork.content = newData;
+                  }}
+                />
               </div>
             ) : null}
           </div>

@@ -37,21 +37,47 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
       className="gallery-card group cursor-pointer hover:bg-accent/50 transition-colors relative"
       onClick={onClick}
     >
-      <div className="aspect-square relative bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        {/* Simple visual representation of the 3D scene */}
-        <div className="relative w-32 h-32">
+      <div className="aspect-square relative bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
+        {/* Improved 3D cube preview */}
+        <div className="relative w-24 h-24 transform-gpu perspective-1000">
+          {/* Main cube face */}
           <div 
-            className="w-full h-full transform rotate-12 shadow-2xl transition-transform group-hover:rotate-[15deg]"
+            className="absolute inset-0 transform rotate-12 shadow-xl transition-transform group-hover:rotate-[18deg] group-hover:scale-110 duration-300"
             style={{ 
               backgroundColor: threeData.color || '#00ff00',
-              clipPath: 'polygon(0% 0%, 85% 0%, 100% 15%, 100% 100%, 15% 100%, 0% 85%)'
+              borderRadius: '4px',
+              border: '1px solid rgba(255,255,255,0.1)'
             }}
           />
+          
+          {/* Top face for 3D effect */}
           <div 
-            className="absolute top-2 left-2 w-full h-full opacity-40"
+            className="absolute -top-2 -left-2 w-24 h-24 transform rotate-12 -skew-x-12 -skew-y-12 opacity-60 transition-transform group-hover:rotate-[18deg] group-hover:scale-110 duration-300"
             style={{ 
               backgroundColor: threeData.color || '#00ff00',
-              clipPath: 'polygon(0% 0%, 85% 0%, 100% 15%, 100% 100%, 15% 100%, 0% 85%)'
+              filter: 'brightness(1.2)',
+              borderRadius: '4px',
+              border: '1px solid rgba(255,255,255,0.2)'
+            }}
+          />
+          
+          {/* Right face for 3D effect */}
+          <div 
+            className="absolute -top-1 -right-2 w-24 h-24 transform rotate-12 skew-x-12 -skew-y-12 opacity-40 transition-transform group-hover:rotate-[18deg] group-hover:scale-110 duration-300"
+            style={{ 
+              backgroundColor: threeData.color || '#00ff00',
+              filter: 'brightness(0.8)',
+              borderRadius: '4px',
+              border: '1px solid rgba(0,0,0,0.2)'
+            }}
+          />
+
+          {/* Subtle glow effect */}
+          <div 
+            className="absolute inset-0 transform rotate-12 opacity-20 blur-sm transition-transform group-hover:rotate-[18deg] group-hover:scale-110 duration-300"
+            style={{ 
+              backgroundColor: threeData.color || '#00ff00',
+              borderRadius: '8px'
             }}
           />
         </div>
