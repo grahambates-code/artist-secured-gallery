@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -107,8 +106,8 @@ const SuperAdminPage = () => {
 
       if (error) throw error;
 
-      // Remove from local state
-      setArtworks(prev => prev.filter(artwork => artwork.id !== artworkId));
+      // Refresh the artwork list from the server after successful deletion
+      await fetchAllArtworks();
       
       toast({
         title: "Artwork deleted",
