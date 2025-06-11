@@ -139,13 +139,21 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [currentData, setCurrentData] = useState({
+  
+  // Default values
+  const defaultData = {
     position: { x: 0, y: 0, z: 0 },
     rotation: { x: 0, y: 0, z: 0 },
     scale: { x: 1, y: 1, z: 1 },
-    color: '#00ff00',
-    ...sceneData
+    color: '#00ff00'
+  };
+  
+  // Safe initialization - only spread if sceneData is an object
+  const [currentData, setCurrentData] = useState({
+    ...defaultData,
+    ...(sceneData && typeof sceneData === 'object' ? sceneData : {})
   });
+  
   const [isEditing, setIsEditing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -218,11 +226,8 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
 
   const handleCancel = () => {
     setCurrentData({
-      position: { x: 0, y: 0, z: 0 },
-      rotation: { x: 0, y: 0, z: 0 },
-      scale: { x: 1, y: 1, z: 1 },
-      color: '#00ff00',
-      ...sceneData
+      ...defaultData,
+      ...(sceneData && typeof sceneData === 'object' ? sceneData : {})
     });
     setIsEditing(false);
   };
