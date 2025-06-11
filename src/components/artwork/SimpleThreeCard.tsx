@@ -1,11 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trash2, Calendar, User, Box, Loader } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { getCachedThreeCapture } from '@/utils/threeCapture';
+import * as THREE from 'three';
 
 interface Artwork {
   id: string;
@@ -31,10 +34,31 @@ interface SimpleThreeCardProps {
   onDelete: (e: React.MouseEvent) => void;
 }
 
+// Interactive 3D Cube Component
+const InteractiveCube = ({ threeData }: { threeData: any }) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  return (
+    <mesh 
+      ref={meshRef}
+      position={[threeData.position.x, threeData.position.y, threeData.position.z]}
+      rotation={[threeData.rotation.x + 0.3, threeData.rotation.y + 0.3, threeData.rotation.z]}
+      scale={[threeData.scale.x, threeData.scale.y, threeData.scale.z]}
+    >
+      <boxGeometry args={[2, 2, 2]} />
+      <meshStandardMaterial color={threeData.color} metalness={0.1} roughness={0.4} />
+    </mesh>
+  );
+};
+
 const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeCardProps) => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [is3DMode, setIs3DMode] = useState(false);
+  
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressRef = useRef(false);
   
   // Ensure all required properties are present with proper defaults
   const threeData = {
@@ -60,8 +84,42 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
       }
     };
 
-    captureScene();
-  }, [threeData.color, threeData.position.x, threeData.position.y, threeData.position.z, threeData.rotation.x, threeData.rotation.y, threeData.rotation.z, threeData.scale.x, threeData.scale.y, threeData.scale.z]);
+    if (!is3DMode) {
+      captureScene();
+    }
+  }, [threeData.color, threeData.position.x, threeData.position.y, threeData.position.z, threeData.rotation.x, threeData.rotation.y, threeData.rotation.z, threeData.scale.x, threeData.scale.y, threeData.scale.z, is3DMode]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isLongPressRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      setIs3DMode(!is3DMode);
+    }, 800); // 800ms for long press
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+    }
+    
+    // Only trigger onClick if it wasn't a long press
+    if (!isLongPressRef.current) {
+      onClick();
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+    }
+  };
+
+  // Prevent event propagation for 3D interactions
+  const handle3DClick = (e: React.MouseEvent) => {
+    if (is3DMode) {
+      e.stopPropagation();
+    }
+  };
 
   // Fallback component for when capture fails
   const ThreeFallback = () => (
@@ -78,38 +136,73 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
 
   return (
     <Card 
-      className="gallery-card group cursor-pointer hover:bg-accent/50 transition-colors relative"
-      onClick={onClick}
+      className="gallery-card group hover:bg-accent/50 transition-colors relative"
+      style={{ cursor: is3DMode ? 'default' : 'pointer' }}
     >
       {/* Force square aspect ratio container */}
-      <div className="w-full aspect-square relative">
+      <div 
+        className="w-full aspect-square relative"
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onClick={handle3DClick}
+      >
         <AspectRatio ratio={1} className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
-          {hasError || (!capturedImage && !isCapturing) ? (
-            <ThreeFallback />
-          ) : capturedImage ? (
-            <img 
-              src={capturedImage} 
-              alt={`3D Scene: ${artwork.title}`}
-              className="w-full h-full object-cover"
-            />
+          {is3DMode ? (
+            <Canvas 
+              camera={{ position: [0, 0, 5], fov: 75 }}
+              className="w-full h-full"
+            >
+              <ambientLight intensity={0.6} />
+              <pointLight position={[5, 5, 5]} intensity={1.2} />
+              <pointLight position={[-5, -5, 5]} intensity={0.8} />
+              
+              <InteractiveCube threeData={threeData} />
+              
+              <OrbitControls 
+                enablePan={true}
+                enableRotate={true}
+                enableZoom={true}
+                enableDamping={true}
+                dampingFactor={0.05}
+              />
+            </Canvas>
           ) : (
-            <ThreeFallback />
+            <>
+              {hasError || (!capturedImage && !isCapturing) ? (
+                <ThreeFallback />
+              ) : capturedImage ? (
+                <img 
+                  src={capturedImage} 
+                  alt={`3D Scene: ${artwork.title}`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <ThreeFallback />
+              )}
+            </>
           )}
           
-          {/* Render status indicator */}
+          {/* Mode indicator badges */}
           <div className="absolute top-2 right-2 flex gap-1">
-            {isCapturing && (
+            {is3DMode && (
+              <Badge variant="secondary" className="bg-blue-500/80 text-white font-light text-xs flex items-center gap-1">
+                <Box className="h-3 w-3" />
+                Interactive 3D
+              </Badge>
+            )}
+            {!is3DMode && isCapturing && (
               <Badge variant="secondary" className="bg-orange-500/80 text-white font-light text-xs flex items-center gap-1">
                 <Loader className="h-3 w-3 animate-spin" />
                 Rendering
               </Badge>
             )}
-            {capturedImage && !isCapturing && (
+            {!is3DMode && capturedImage && !isCapturing && (
               <Badge variant="outline" className="bg-green-500/80 text-white font-light text-xs">
                 Image
               </Badge>
             )}
-            {!capturedImage && !isCapturing && (
+            {!is3DMode && !capturedImage && !isCapturing && (
               <Badge variant="outline" className="bg-background/80 text-foreground font-light text-xs">
                 3D Scene
               </Badge>
@@ -129,13 +222,24 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
             </div>
           )}
 
-          {/* Debug overlay showing current values */}
-          <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-mono">
-              <div>Pos: {threeData.position.x.toFixed(1)}, {threeData.position.y.toFixed(1)}, {threeData.position.z.toFixed(1)}</div>
-              <div>Scale: {threeData.scale.x.toFixed(1)}, {threeData.scale.y.toFixed(1)}, {threeData.scale.z.toFixed(1)}</div>
+          {/* Instructions overlay */}
+          {!is3DMode && (
+            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs text-muted-foreground">
+                Long press for 3D mode
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Debug overlay showing current values - only in non-3D mode */}
+          {!is3DMode && (
+            <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-mono">
+                <div>Pos: {threeData.position.x.toFixed(1)}, {threeData.position.y.toFixed(1)}, {threeData.position.z.toFixed(1)}</div>
+                <div>Scale: {threeData.scale.x.toFixed(1)}, {threeData.scale.y.toFixed(1)}, {threeData.scale.z.toFixed(1)}</div>
+              </div>
+            </div>
+          )}
         </AspectRatio>
       </div>
 
@@ -159,7 +263,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
           <div className="flex items-center gap-2">
             <Box className="h-4 w-4 text-muted-foreground" />
             <span className="font-mono text-xs bg-muted px-2 py-1 rounded text-muted-foreground font-light">
-              Interactive 3D Cube
+              {is3DMode ? 'Interactive 3D Cube' : 'Static 3D Preview'}
             </span>
           </div>
 
@@ -169,6 +273,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
             <div>Rotation: ({threeData.rotation.x.toFixed(2)}, {threeData.rotation.y.toFixed(2)}, {threeData.rotation.z.toFixed(2)})</div>
             <div>Scale: ({threeData.scale.x.toFixed(2)}, {threeData.scale.y.toFixed(2)}, {threeData.scale.z.toFixed(2)})</div>
             <div>Color: {threeData.color}</div>
+            {is3DMode && <div className="text-blue-400">Mode: Interactive 3D - Use mouse to explore!</div>}
           </div>
           
           <div className="flex items-center gap-2">
