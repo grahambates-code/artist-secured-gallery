@@ -45,9 +45,10 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
       className="gallery-card group cursor-pointer hover:bg-accent/50 transition-colors relative"
       onClick={onClick}
     >
-      <AspectRatio ratio={1} className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
-        {/* Static Three.js scene preview with square aspect ratio */}
-        <div className="w-full h-full">
+      {/* Force square aspect ratio with fixed container */}
+      <div className="w-full aspect-square">
+        <AspectRatio ratio={1} className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden w-full h-full">
+          {/* Static Three.js scene preview with square aspect ratio */}
           <Canvas camera={{ position: [0, 0, 5], fov: 75, aspect: 1 }}>
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} />
@@ -58,37 +59,37 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
               scale={threeData.scale}
             />
           </Canvas>
-        </div>
-        
-        <div className="absolute top-2 right-2">
-          <Badge variant="outline" className="bg-background/80 text-foreground font-light text-xs">
-            3D Scene
-          </Badge>
-        </div>
-
-        {canDelete && (
-          <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={onDelete}
-              className="h-8 w-8 p-0 font-light"
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
+          
+          <div className="absolute top-2 right-2">
+            <Badge variant="outline" className="bg-background/80 text-foreground font-light text-xs">
+              3D Scene
+            </Badge>
           </div>
-        )}
 
-        {/* Debug overlay showing current values */}
-        <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-mono">
-            <div>Pos: {threeData.position.x.toFixed(1)}, {threeData.position.y.toFixed(1)}, {threeData.position.z.toFixed(1)}</div>
-            {threeData.scale && (
-              <div>Scale: {threeData.scale.x.toFixed(1)}, {threeData.scale.y.toFixed(1)}, {threeData.scale.z.toFixed(1)}</div>
-            )}
+          {canDelete && (
+            <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={onDelete}
+                className="h-8 w-8 p-0 font-light"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+
+          {/* Debug overlay showing current values */}
+          <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-mono">
+              <div>Pos: {threeData.position.x.toFixed(1)}, {threeData.position.y.toFixed(1)}, {threeData.position.z.toFixed(1)}</div>
+              {threeData.scale && (
+                <div>Scale: {threeData.scale.x.toFixed(1)}, {threeData.scale.y.toFixed(1)}, {threeData.scale.z.toFixed(1)}</div>
+              )}
+            </div>
           </div>
-        </div>
-      </AspectRatio>
+        </AspectRatio>
+      </div>
 
       <CardContent className="p-4">
         <h3 className="font-light text-lg mb-2 text-foreground tracking-wide">{artwork.title}</h3>
