@@ -36,11 +36,13 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
   const [isCapturing, setIsCapturing] = useState(true);
   const [hasError, setHasError] = useState(false);
   
-  const threeData = artwork.content || { 
-    color: '#00ff00', 
-    position: { x: 0, y: 0, z: 0 }, 
+  // Ensure all required properties are present with proper defaults
+  const threeData = {
+    color: '#00ff00',
+    position: { x: 0, y: 0, z: 0 },
     rotation: { x: 0, y: 0, z: 0 },
-    scale: { x: 1, y: 1, z: 1 }
+    scale: { x: 1, y: 1, z: 1 },
+    ...artwork.content
   };
 
   useEffect(() => {
@@ -131,9 +133,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
           <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-mono">
               <div>Pos: {threeData.position.x.toFixed(1)}, {threeData.position.y.toFixed(1)}, {threeData.position.z.toFixed(1)}</div>
-              {threeData.scale && (
-                <div>Scale: {threeData.scale.x.toFixed(1)}, {threeData.scale.y.toFixed(1)}, {threeData.scale.z.toFixed(1)}</div>
-              )}
+              <div>Scale: {threeData.scale.x.toFixed(1)}, {threeData.scale.y.toFixed(1)}, {threeData.scale.z.toFixed(1)}</div>
             </div>
           </div>
         </AspectRatio>
@@ -167,9 +167,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
           <div className="text-xs text-muted-foreground font-mono bg-muted/50 p-2 rounded space-y-1">
             <div>Position: ({threeData.position.x.toFixed(2)}, {threeData.position.y.toFixed(2)}, {threeData.position.z.toFixed(2)})</div>
             <div>Rotation: ({threeData.rotation.x.toFixed(2)}, {threeData.rotation.y.toFixed(2)}, {threeData.rotation.z.toFixed(2)})</div>
-            {threeData.scale && (
-              <div>Scale: ({threeData.scale.x.toFixed(2)}, {threeData.scale.y.toFixed(2)}, {threeData.scale.z.toFixed(2)})</div>
-            )}
+            <div>Scale: ({threeData.scale.x.toFixed(2)}, {threeData.scale.y.toFixed(2)}, {threeData.scale.z.toFixed(2)})</div>
             <div>Color: {threeData.color}</div>
           </div>
           
