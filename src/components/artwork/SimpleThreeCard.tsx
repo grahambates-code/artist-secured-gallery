@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { Suspense, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,31 @@ interface SimpleThreeCardProps {
   onDelete: (e: React.MouseEvent) => void;
 }
 
+const ThreePreview = ({ threeData }: { threeData: any }) => {
+  return (
+    <Canvas 
+      camera={{ position: [0, 0, 5], fov: 75, aspect: 1 }}
+      gl={{ 
+        antialias: false, // Disable antialiasing for better mobile performance
+        powerPreference: "low-power" // Use low power mode for mobile
+      }}
+      dpr={Math.min(window.devicePixelRatio, 2)} // Limit pixel ratio for performance
+    >
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} />
+      <PreviewCube 
+        color={threeData.color}
+        position={threeData.position}
+        rotation={threeData.rotation}
+        scale={threeData.scale}
+      />
+    </Canvas>
+  );
+};
+
 const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeCardProps) => {
+  const [hasError, setHasError] = useState(false);
+  
   const threeData = artwork.content || { 
     color: '#00ff00', 
     position: { x: 0, y: 0, z: 0 }, 
@@ -40,25 +64,34 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
     scale: { x: 1, y: 1, z: 1 }
   };
 
+  // Fallback component for when Three.js fails to render
+  const ThreeFallback = () => (
+    <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+      <div className="text-center">
+        <Box className="h-12 w-12 mx-auto text-white mb-2" />
+        <p className="text-white text-sm">3D Preview</p>
+        <p className="text-white/70 text-xs">WebGL Unavailable</p>
+      </div>
+    </div>
+  );
+
   return (
     <Card 
       className="gallery-card group cursor-pointer hover:bg-accent/50 transition-colors relative"
       onClick={onClick}
     >
-      {/* Force square aspect ratio with fixed container */}
-      <div className="w-full aspect-square">
-        <AspectRatio ratio={1} className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden w-full h-full">
-          {/* Static Three.js scene preview with square aspect ratio */}
-          <Canvas camera={{ position: [0, 0, 5], fov: 75, aspect: 1 }}>
-            <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} />
-            <PreviewCube 
-              color={threeData.color}
-              position={threeData.position}
-              rotation={threeData.rotation}
-              scale={threeData.scale}
-            />
-          </Canvas>
+      {/* Force square aspect ratio container */}
+      <div className="w-full aspect-square relative">
+        <AspectRatio ratio={1} className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
+          {hasError ? (
+            <ThreeFallback />
+          ) : (
+            <Suspense fallback={<ThreeFallback />}>
+              <div className="w-full h-full">
+                <ThreePreview threeData={threeData} />
+              </div>
+            </Suspense>
+          )}
           
           <div className="absolute top-2 right-2">
             <Badge variant="outline" className="bg-background/80 text-foreground font-light text-xs">

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Image as ImageIcon, User, Calendar, Mail, Trash2, LogOut } from 'lucide-react';
+import { Shield, Image as ImageIcon, User, Calendar, Mail, Trash2, LogOut, Home } from 'lucide-react';
 
 interface ArtworkWithProfile {
   id: string;
@@ -202,14 +201,24 @@ const SuperAdminPage = () => {
             <p className="text-muted-foreground font-light tracking-wide">Manage all artwork submissions across the platform</p>
             <p className="text-sm text-muted-foreground font-light">Logged in as: {user.email}</p>
           </div>
-          <Button 
-            onClick={handleSignOut}
-            variant="outline"
-            className="flex items-center gap-2 font-light tracking-wide"
-          >
-            <LogOut className="h-4 w-4" />
-            SIGN OUT
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => navigate('/')}
+              variant="outline"
+              className="flex items-center gap-2 font-light tracking-wide"
+            >
+              <Home className="h-4 w-4" />
+              GALLERY
+            </Button>
+            <Button 
+              onClick={handleSignOut}
+              variant="outline"
+              className="flex items-center gap-2 font-light tracking-wide"
+            >
+              <LogOut className="h-4 w-4" />
+              SIGN OUT
+            </Button>
+          </div>
         </div>
 
         <div className="mb-6">
@@ -350,3 +359,5 @@ const SuperAdminPage = () => {
 };
 
 export default SuperAdminPage;
+
+}

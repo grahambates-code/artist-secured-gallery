@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import GalleryHeader from '@/components/gallery/GalleryHeader';
 import GalleryContent from '@/components/gallery/GalleryContent';
@@ -10,19 +10,9 @@ import { useArtworkData } from '@/hooks/useArtworkData';
 
 const Index = () => {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
   const [uploadPanelOpen, setUploadPanelOpen] = useState(false);
   const [viewPanelOpen, setViewPanelOpen] = useState(false);
   const [selectedArtwork, setSelectedArtwork] = useState<any>(null);
-
-  const isAdmin = user?.email === 'mogmog@gmail.com';
-
-  // Redirect super admin to admin panel
-  useEffect(() => {
-    if (user && isAdmin) {
-      navigate('/admin');
-    }
-  }, [user, isAdmin, navigate]);
 
   const { data: artworkData, isLoading: artworkLoading, refetch: refetchArtwork } = useArtworkData(user);
 
@@ -44,7 +34,7 @@ const Index = () => {
   };
 
   const handleSignInClick = () => {
-    navigate('/auth');
+    window.location.href = '/auth';
   };
 
   const handleUploadClick = () => {
@@ -52,15 +42,6 @@ const Index = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  // Don't render anything for admin users as they'll be redirected
-  if (user && isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingSpinner />
@@ -84,7 +65,7 @@ const Index = () => {
         onArtworkDeleted={handleArtworkDeleted}
       />
 
-      {/* Slide-in Upload Panel - Only show if user is authenticated */}
+      {/* Slide-in Upload Panel - Show for all authenticated users including super admin */}
       {user && (
         <ArtworkUploadPanel 
           open={uploadPanelOpen} 
