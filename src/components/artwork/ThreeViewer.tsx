@@ -212,38 +212,40 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
 
   return (
     <div className="space-y-4">
-      <AspectRatio ratio={1} className="border border-border rounded-lg overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 relative w-full max-w-sm mx-auto">
-        <Canvas camera={{ position: [0, 0, 5], fov: 75, aspect: 1 }}>
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} />
-          
-          {isEditing ? (
-            <DraggableCube 
-              color={currentData.color}
-              position={currentData.position}
-              rotation={currentData.rotation}
-              scale={currentData.scale || { x: 1, y: 1, z: 1 }}
-              onPositionChange={handlePositionChange}
-              isDragging={isDragging}
-              setIsDragging={setIsDragging}
+      <div className="w-64 h-64 mx-auto">
+        <AspectRatio ratio={1} className="border border-border rounded-lg overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 relative w-full h-full">
+          <Canvas camera={{ position: [0, 0, 5], fov: 75, aspect: 1 }}>
+            <ambientLight intensity={0.5} />
+            <pointLight position={[10, 10, 10]} />
+            
+            {isEditing ? (
+              <DraggableCube 
+                color={currentData.color}
+                position={currentData.position}
+                rotation={currentData.rotation}
+                scale={currentData.scale || { x: 1, y: 1, z: 1 }}
+                onPositionChange={handlePositionChange}
+                isDragging={isDragging}
+                setIsDragging={setIsDragging}
+              />
+            ) : (
+              <StaticCube 
+                color={currentData.color}
+                position={currentData.position}
+                rotation={currentData.rotation}
+                scale={currentData.scale || { x: 1, y: 1, z: 1 }}
+              />
+            )}
+            
+            <OrbitControls 
+              enabled={isEditing && !isDragging}
+              enablePan={isEditing && !isDragging} 
+              enableRotate={isEditing && !isDragging}
+              enableZoom={isEditing && !isDragging}
             />
-          ) : (
-            <StaticCube 
-              color={currentData.color}
-              position={currentData.position}
-              rotation={currentData.rotation}
-              scale={currentData.scale || { x: 1, y: 1, z: 1 }}
-            />
-          )}
-          
-          <OrbitControls 
-            enablePan={isEditing && !isDragging} 
-            enabled={isEditing && !isDragging}
-            enableRotate={isEditing && !isDragging}
-            enableZoom={isEditing && !isDragging}
-          />
-        </Canvas>
-      </AspectRatio>
+          </Canvas>
+        </AspectRatio>
+      </div>
 
       {canEdit && user && (
         <div className="flex gap-2">
