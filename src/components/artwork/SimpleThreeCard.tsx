@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, Calendar, User, Box } from 'lucide-react';
+import { Trash2, Calendar, User, Box, Loader } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { getCachedThreeCapture } from '@/utils/threeCapture';
 
@@ -94,10 +94,24 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
             <ThreeFallback />
           )}
           
-          <div className="absolute top-2 right-2">
-            <Badge variant="outline" className="bg-background/80 text-foreground font-light text-xs">
-              3D Scene
-            </Badge>
+          {/* Render status indicator */}
+          <div className="absolute top-2 right-2 flex gap-1">
+            {isCapturing && (
+              <Badge variant="secondary" className="bg-orange-500/80 text-white font-light text-xs flex items-center gap-1">
+                <Loader className="h-3 w-3 animate-spin" />
+                Rendering
+              </Badge>
+            )}
+            {capturedImage && !isCapturing && (
+              <Badge variant="outline" className="bg-green-500/80 text-white font-light text-xs">
+                Image
+              </Badge>
+            )}
+            {!capturedImage && !isCapturing && (
+              <Badge variant="outline" className="bg-background/80 text-foreground font-light text-xs">
+                3D Scene
+              </Badge>
+            )}
           </div>
 
           {canDelete && (
