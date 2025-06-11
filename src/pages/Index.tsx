@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +36,10 @@ const Index = () => {
   };
 
   const handleArtworkDeleted = () => {
+    refetchArtwork();
+  };
+
+  const handleArtworkUpdated = () => {
     refetchArtwork();
   };
 
@@ -96,6 +99,7 @@ const Index = () => {
         onOpenChange={setViewPanelOpen}
         artwork={selectedArtwork}
         onArtworkDeleted={handleArtworkDeleted}
+        onArtworkUpdated={handleArtworkUpdated}
       />
     </div>
   );

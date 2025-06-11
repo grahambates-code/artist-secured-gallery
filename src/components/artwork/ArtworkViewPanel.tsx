@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
@@ -41,9 +40,10 @@ interface ArtworkViewPanelProps {
   onOpenChange: (open: boolean) => void;
   artwork: Artwork | null;
   onArtworkDeleted?: () => void;
+  onArtworkUpdated?: () => void;
 }
 
-const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted }: ArtworkViewPanelProps) => {
+const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted, onArtworkUpdated }: ArtworkViewPanelProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -92,6 +92,16 @@ const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted }: Art
         description: error.message || "Failed to delete artwork",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleSceneUpdate = (newData: any) => {
+    // Update the artwork object with new data
+    artwork.content = newData;
+    
+    // Trigger refresh of artwork list so the grid shows updated data
+    if (onArtworkUpdated) {
+      onArtworkUpdated();
     }
   };
 
@@ -171,10 +181,7 @@ const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted }: Art
                   sceneData={threeData} 
                   artworkId={artwork.id}
                   canEdit={isOwner}
-                  onSceneUpdate={(newData) => {
-                    // Update the artwork object with new data
-                    artwork.content = newData;
-                  }}
+                  onSceneUpdate={handleSceneUpdate}
                 />
               </div>
             ) : null}
