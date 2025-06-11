@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -36,11 +35,18 @@ const DraggableCube = ({
 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const { camera, gl } = useThree();
+  const dragOffset = useRef<THREE.Vector3>(new THREE.Vector3());
   
   const handlePointerDown = (event: any) => {
     event.stopPropagation();
     setIsDragging(true);
     gl.domElement.style.cursor = 'grabbing';
+    
+    // Calculate offset from click point to cube center
+    if (meshRef.current) {
+      const cubePosition = meshRef.current.position.clone();
+      dragOffset.current.copy(event.point).sub(cubePosition);
+    }
   };
 
   const handlePointerUp = () => {
@@ -51,13 +57,21 @@ const DraggableCube = ({
   const handlePointerMove = (event: any) => {
     if (isDragging && meshRef.current) {
       event.stopPropagation();
-      const newPosition = {
-        x: event.point.x,
-        y: event.point.y,
-        z: event.point.z
-      };
-      meshRef.current.position.set(newPosition.x, newPosition.y, newPosition.z);
-      onPositionChange(newPosition);
+      
+      // Apply the offset to maintain relative position from click point
+      const newPosition = event.point.clone().sub(dragOffset.current);
+      
+      // Clamp the position to reasonable bounds
+      newPosition.x = Math.max(-5, Math.min(5, newPosition.x));
+      newPosition.y = Math.max(-3, Math.min(3, newPosition.y));
+      newPosition.z = Math.max(-2, Math.min(2, newPosition.z));
+      
+      meshRef.current.position.copy(newPosition);
+      onPositionChange({
+        x: newPosition.x,
+        y: newPosition.y,
+        z: newPosition.z
+      });
     }
   };
 
@@ -69,6 +83,8 @@ const DraggableCube = ({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerMove={handlePointerMove}
+      onPointerEnter={() => gl.domElement.style.cursor = 'grab'}
+      onPointerLeave={() => !isDragging && (gl.domElement.style.cursor = 'default')}
     >
       <boxGeometry args={[2, 2, 2]} />
       <meshStandardMaterial color={color} />
@@ -183,7 +199,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
             />
           )}
           
-          <OrbitControls enablePan={false} enabled={!isDragging} />
+          <OrbitControls enablePan={!isDragging} enabled={!isDragging} />
         </Canvas>
       </div>
 
