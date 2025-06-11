@@ -1,12 +1,11 @@
 
-import React, { Suspense, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trash2, Calendar, User, Box } from 'lucide-react';
-import { Canvas } from '@react-three/fiber';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import PreviewCube from './PreviewCube';
+import { getCachedThreeCapture } from '@/utils/threeCapture';
 
 interface Artwork {
   id: string;
@@ -32,29 +31,9 @@ interface SimpleThreeCardProps {
   onDelete: (e: React.MouseEvent) => void;
 }
 
-const ThreePreview = ({ threeData }: { threeData: any }) => {
-  return (
-    <Canvas 
-      camera={{ position: [0, 0, 5], fov: 75, aspect: 1 }}
-      gl={{ 
-        antialias: false, // Disable antialiasing for better mobile performance
-        powerPreference: "low-power" // Use low power mode for mobile
-      }}
-      dpr={Math.min(window.devicePixelRatio, 2)} // Limit pixel ratio for performance
-    >
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} />
-      <PreviewCube 
-        color={threeData.color}
-        position={threeData.position}
-        rotation={threeData.rotation}
-        scale={threeData.scale}
-      />
-    </Canvas>
-  );
-};
-
 const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeCardProps) => {
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(true);
   const [hasError, setHasError] = useState(false);
   
   const threeData = artwork.content || { 
@@ -64,13 +43,33 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
     scale: { x: 1, y: 1, z: 1 }
   };
 
-  // Fallback component for when Three.js fails to render
+  useEffect(() => {
+    const captureScene = async () => {
+      try {
+        setIsCapturing(true);
+        setHasError(false);
+        const imageData = await getCachedThreeCapture(threeData);
+        setCapturedImage(imageData);
+      } catch (error) {
+        console.error('Failed to capture Three.js scene:', error);
+        setHasError(true);
+      } finally {
+        setIsCapturing(false);
+      }
+    };
+
+    captureScene();
+  }, [threeData.color, threeData.position.x, threeData.position.y, threeData.position.z, threeData.rotation.x, threeData.rotation.y, threeData.rotation.z, threeData.scale.x, threeData.scale.y, threeData.scale.z]);
+
+  // Fallback component for when capture fails
   const ThreeFallback = () => (
     <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
       <div className="text-center">
         <Box className="h-12 w-12 mx-auto text-white mb-2" />
         <p className="text-white text-sm">3D Preview</p>
-        <p className="text-white/70 text-xs">WebGL Unavailable</p>
+        <p className="text-white/70 text-xs">
+          {isCapturing ? 'Rendering...' : 'Preview Unavailable'}
+        </p>
       </div>
     </div>
   );
@@ -83,14 +82,16 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
       {/* Force square aspect ratio container */}
       <div className="w-full aspect-square relative">
         <AspectRatio ratio={1} className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
-          {hasError ? (
+          {hasError || (!capturedImage && !isCapturing) ? (
             <ThreeFallback />
+          ) : capturedImage ? (
+            <img 
+              src={capturedImage} 
+              alt={`3D Scene: ${artwork.title}`}
+              className="w-full h-full object-cover"
+            />
           ) : (
-            <Suspense fallback={<ThreeFallback />}>
-              <div className="w-full h-full">
-                <ThreePreview threeData={threeData} />
-              </div>
-            </Suspense>
+            <ThreeFallback />
           )}
           
           <div className="absolute top-2 right-2">
