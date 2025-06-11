@@ -212,7 +212,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
 
   return (
     <div className="space-y-4">
-      <AspectRatio ratio={1} className="border border-border rounded-lg overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 relative max-w-sm">
+      <AspectRatio ratio={1} className="border border-border rounded-lg overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 relative w-full max-w-sm mx-auto">
         <Canvas camera={{ position: [0, 0, 5], fov: 75, aspect: 1 }}>
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} />
