@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trash2, Calendar, User, Box } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import PreviewCube from './PreviewCube';
 
 interface Artwork {
@@ -44,16 +45,17 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
       className="gallery-card group cursor-pointer hover:bg-accent/50 transition-colors relative"
       onClick={onClick}
     >
-      <div className="aspect-square relative bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
-        {/* Static Three.js scene preview - no interaction, no auto-rotation */}
+      <AspectRatio ratio={4/3} className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
+        {/* Static Three.js scene preview with consistent aspect ratio */}
         <div className="w-full h-full">
-          <Canvas camera={{ position: [0, 0, 5] }}>
+          <Canvas camera={{ position: [0, 0, 5], fov: 75, aspect: 4/3 }}>
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} />
             <PreviewCube 
               color={threeData.color}
               position={threeData.position}
               rotation={threeData.rotation}
+              scale={threeData.scale}
             />
           </Canvas>
         </div>
@@ -86,7 +88,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
             )}
           </div>
         </div>
-      </div>
+      </AspectRatio>
 
       <CardContent className="p-4">
         <h3 className="font-light text-lg mb-2 text-foreground tracking-wide">{artwork.title}</h3>

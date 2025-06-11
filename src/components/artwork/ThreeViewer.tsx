@@ -4,6 +4,7 @@ import { OrbitControls } from '@react-three/drei';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -261,8 +262,8 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
 
   return (
     <div className="space-y-4">
-      <div className="w-full h-96 border border-border rounded-lg overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 relative">
-        <Canvas camera={{ position: [0, 0, 5] }}>
+      <AspectRatio ratio={4/3} className="border border-border rounded-lg overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 relative">
+        <Canvas camera={{ position: [0, 0, 5], fov: 75, aspect: 4/3 }}>
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} />
           
@@ -428,7 +429,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
             </div>
           </div>
         )}
-      </div>
+      </AspectRatio>
 
       {canEdit && user && (
         <div className="flex gap-2">
