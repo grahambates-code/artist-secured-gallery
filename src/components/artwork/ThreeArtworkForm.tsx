@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -10,6 +9,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import PreviewCube from './PreviewCube';
 import * as THREE from 'three';
 
 interface ThreeArtworkFormProps {
@@ -17,7 +17,7 @@ interface ThreeArtworkFormProps {
   onSuccess: () => void;
 }
 
-// Interactive Cube Component
+// Interactive Cube Component for the form
 const InteractiveCube = ({ color, onPositionChange, onRotationChange }: {
   color: string;
   onPositionChange: (position: THREE.Vector3) => void;
@@ -34,18 +34,11 @@ const InteractiveCube = ({ color, onPositionChange, onRotationChange }: {
   }, [onPositionChange, onRotationChange]);
 
   return (
-    <mesh 
-      ref={meshRef}
-      onPointerMove={(e) => {
-        if (meshRef.current) {
-          onPositionChange(meshRef.current.position);
-          onRotationChange(meshRef.current.rotation);
-        }
-      }}
-    >
-      <boxGeometry args={[2, 2, 2]} />
-      <meshStandardMaterial color={color} />
-    </mesh>
+    <PreviewCube 
+      color={color}
+      position={{ x: 0, y: 0, z: 0 }}
+      rotation={{ x: 0, y: 0, z: 0 }}
+    />
   );
 };
 

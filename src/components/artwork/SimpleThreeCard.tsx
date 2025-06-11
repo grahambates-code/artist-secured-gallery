@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trash2, Calendar, User, Box } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import PreviewCube from './PreviewCube';
 
 interface Artwork {
   id: string;
@@ -31,22 +30,6 @@ interface SimpleThreeCardProps {
   onDelete: (e: React.MouseEvent) => void;
 }
 
-const PreviewCube = ({ color, position, rotation }: {
-  color: string;
-  position: { x: number; y: number; z: number };
-  rotation: { x: number; y: number; z: number };
-}) => {
-  return (
-    <mesh 
-      position={[position.x, position.y, position.z]}
-      rotation={[rotation.x, rotation.y, rotation.z]}
-    >
-      <boxGeometry args={[2, 2, 2]} />
-      <meshStandardMaterial color={color} />
-    </mesh>
-  );
-};
-
 const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeCardProps) => {
   const threeData = artwork.content || { color: '#00ff00', position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 } };
 
@@ -56,7 +39,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
       onClick={onClick}
     >
       <div className="aspect-square relative bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
-        {/* Actual Three.js scene preview */}
+        {/* Static Three.js scene preview - no interaction, no auto-rotation */}
         <div className="w-full h-full">
           <Canvas camera={{ position: [0, 0, 5] }}>
             <ambientLight intensity={0.5} />
@@ -65,13 +48,6 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
               color={threeData.color}
               position={threeData.position}
               rotation={threeData.rotation}
-            />
-            <OrbitControls 
-              enablePan={false} 
-              enableZoom={false}
-              enableRotate={true}
-              autoRotate={true}
-              autoRotateSpeed={1}
             />
           </Canvas>
         </div>

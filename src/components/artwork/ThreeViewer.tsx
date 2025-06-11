@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import PreviewCube from './PreviewCube';
 import * as THREE from 'three';
 
 interface ThreeViewerProps {
@@ -97,17 +98,12 @@ const InteractiveCube = ({ color, position, rotation }: {
   position: { x: number; y: number; z: number };
   rotation: { x: number; y: number; z: number };
 }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-
   return (
-    <mesh 
-      ref={meshRef}
-      position={[position.x, position.y, position.z]}
-      rotation={[rotation.x, rotation.y, rotation.z]}
-    >
-      <boxGeometry args={[2, 2, 2]} />
-      <meshStandardMaterial color={color} />
-    </mesh>
+    <PreviewCube 
+      color={color}
+      position={position}
+      rotation={rotation}
+    />
   );
 };
 
