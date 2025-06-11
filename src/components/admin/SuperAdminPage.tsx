@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +15,8 @@ interface ArtworkWithProfile {
   description: string | null;
   medium: string | null;
   year: number | null;
-  image_url: string;
+  type: string;
+  content: any;
   published: boolean;
   created_at: string;
   user_id: string;
@@ -146,6 +148,13 @@ const SuperAdminPage = () => {
     }
   };
 
+  const getImageUrl = (artwork: ArtworkWithProfile) => {
+    if (artwork.type === 'image' && artwork.content?.image_url) {
+      return artwork.content.image_url;
+    }
+    return null;
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -232,78 +241,98 @@ const SuperAdminPage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {artworks.map((artwork) => (
-            <Card key={artwork.id} className="gallery-card overflow-hidden hover:bg-accent/50 transition-colors">
-              <div className="aspect-square relative">
-                <img
-                  src={artwork.image_url}
-                  alt={artwork.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-2 right-2">
-                  <Badge variant={artwork.published ? "default" : "secondary"} className="font-light">
-                    {artwork.published ? "Published" : "Draft"}
-                  </Badge>
-                </div>
-                <div className="absolute top-2 left-2">
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDeleteArtwork(artwork.id, artwork.title)}
-                    disabled={deletingIds.has(artwork.id)}
-                    className="h-8 w-8 p-0 font-light"
-                  >
-                    {deletingIds.has(artwork.id) ? (
-                      <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
-                    ) : (
-                      <Trash2 className="h-3 w-3" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-              
-              <CardContent className="p-4">
-                <h3 className="font-light text-lg mb-2 text-foreground tracking-wide">{artwork.title}</h3>
-                
-                {artwork.description && (
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2 font-light">
-                    {artwork.description}
-                  </p>
-                )}
-                
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-light text-foreground">
-                      {artwork.profiles?.artist_name || 'Unknown Artist'}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-mono text-xs bg-muted px-2 py-1 rounded text-muted-foreground font-light">
-                      {artwork.profiles?.email || 'No email'}
-                    </span>
-                  </div>
-                  
-                  {artwork.medium && (
-                    <div className="flex items-center gap-2">
-                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-foreground font-light">{artwork.medium}</span>
+          {artworks.map((artwork) => {
+            const imageUrl = getImageUrl(artwork);
+            
+            return (
+              <Card key={artwork.id} className="gallery-card overflow-hidden hover:bg-accent/50 transition-colors">
+                <div className="aspect-square relative">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={artwork.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : artwork.type === 'text' ? (
+                    <div className="w-full h-full bg-card border border-border flex items-center justify-center">
+                      <div className="text-center p-4">
+                        <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">Text Artwork</p>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
+                          {artwork.content?.text || 'No content'}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full bg-muted flex items-center justify-center">
+                      <ImageIcon className="h-12 w-12 text-muted-foreground" />
                     </div>
                   )}
-                  
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground font-light">
-                      {artwork.year || 'Year not specified'} • 
-                      Added {new Date(artwork.created_at).toLocaleDateString()}
-                    </span>
+                  <div className="absolute top-2 right-2">
+                    <Badge variant={artwork.published ? "default" : "secondary"} className="font-light">
+                      {artwork.published ? "Published" : "Draft"}
+                    </Badge>
+                  </div>
+                  <div className="absolute top-2 left-2">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDeleteArtwork(artwork.id, artwork.title)}
+                      disabled={deletingIds.has(artwork.id)}
+                      className="h-8 w-8 p-0 font-light"
+                    >
+                      {deletingIds.has(artwork.id) ? (
+                        <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
+                      ) : (
+                        <Trash2 className="h-3 w-3" />
+                      )}
+                    </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+                
+                <CardContent className="p-4">
+                  <h3 className="font-light text-lg mb-2 text-foreground tracking-wide">{artwork.title}</h3>
+                  
+                  {artwork.description && (
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2 font-light">
+                      {artwork.description}
+                    </p>
+                  )}
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-light text-foreground">
+                        {artwork.profiles?.artist_name || 'Unknown Artist'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-mono text-xs bg-muted px-2 py-1 rounded text-muted-foreground font-light">
+                        {artwork.profiles?.email || 'No email'}
+                      </span>
+                    </div>
+                    
+                    {artwork.medium && (
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-foreground font-light">{artwork.medium}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-foreground font-light">
+                        {artwork.year || 'Year not specified'} • 
+                        Added {new Date(artwork.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {artworks.length === 0 && (
