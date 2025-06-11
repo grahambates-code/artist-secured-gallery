@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -148,16 +147,21 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
     color: '#00ff00'
   };
   
-  // Safe initialization with explicit type checking
-  const isValidSceneData = sceneData && 
-    typeof sceneData === 'object' && 
-    sceneData !== null && 
-    !Array.isArray(sceneData);
+  // Safe initialization - explicitly construct the object to avoid spread type errors
+  const initializeData = () => {
+    if (!sceneData || typeof sceneData !== 'object' || sceneData === null || Array.isArray(sceneData)) {
+      return defaultData;
+    }
     
-  const [currentData, setCurrentData] = useState({
-    ...defaultData,
-    ...(isValidSceneData ? sceneData : {})
-  });
+    return {
+      position: sceneData.position || defaultData.position,
+      rotation: sceneData.rotation || defaultData.rotation,
+      scale: sceneData.scale || defaultData.scale,
+      color: sceneData.color || defaultData.color
+    };
+  };
+    
+  const [currentData, setCurrentData] = useState(initializeData());
   
   const [isEditing, setIsEditing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -230,10 +234,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
   };
 
   const handleCancel = () => {
-    setCurrentData({
-      ...defaultData,
-      ...(isValidSceneData ? sceneData : {})
-    });
+    setCurrentData(initializeData());
     setIsEditing(false);
   };
 
