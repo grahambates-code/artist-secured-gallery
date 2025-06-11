@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -55,6 +56,17 @@ const DraggableCube = ({
   const handlePointerUp = () => {
     setIsDragging(false);
     gl.domElement.style.cursor = 'grab';
+    
+    // Ensure final position is captured when drag ends
+    if (meshRef.current) {
+      const finalPosition = meshRef.current.position;
+      console.log('Final drag position:', finalPosition);
+      onPositionChange({
+        x: parseFloat(finalPosition.x.toFixed(2)),
+        y: parseFloat(finalPosition.y.toFixed(2)),
+        z: parseFloat(finalPosition.z.toFixed(2))
+      });
+    }
   };
 
   const handlePointerMove = (event: any) => {
@@ -70,10 +82,13 @@ const DraggableCube = ({
       newPosition.z = Math.max(-2, Math.min(2, newPosition.z));
       
       meshRef.current.position.copy(newPosition);
+      
+      // Update position in real-time during drag
+      console.log('Dragging to position:', newPosition);
       onPositionChange({
-        x: newPosition.x,
-        y: newPosition.y,
-        z: newPosition.z
+        x: parseFloat(newPosition.x.toFixed(2)),
+        y: parseFloat(newPosition.y.toFixed(2)),
+        z: parseFloat(newPosition.z.toFixed(2))
       });
     }
   };
@@ -124,16 +139,19 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
   const [isSaving, setIsSaving] = useState(false);
 
   const handlePositionChange = (newPosition: { x: number; y: number; z: number }) => {
+    console.log('Position change received:', newPosition);
     const updatedData = {
       ...currentData,
       position: newPosition
     };
     setCurrentData(updatedData);
+    console.log('Updated currentData:', updatedData);
   };
 
   const handleSave = async () => {
     if (!artworkId || !user) return;
 
+    console.log('Saving data:', currentData);
     setIsSaving(true);
     try {
       const { error } = await supabase
@@ -233,12 +251,18 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
       )}
 
       {isEditing && (
-        <p className="text-sm text-muted-foreground">
-          Click and drag the cube to reposition it. Use orbit controls to view from different angles.
-        </p>
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Click and drag the cube to reposition it. Use orbit controls to view from different angles.
+          </p>
+          <div className="text-xs text-muted-foreground font-mono bg-muted p-2 rounded">
+            Position: x: {currentData.position.x.toFixed(2)}, y: {currentData.position.y.toFixed(2)}, z: {currentData.position.z.toFixed(2)}
+          </div>
+        </div>
       )}
     </div>
   );
 };
 
 export default ThreeViewer;
+
