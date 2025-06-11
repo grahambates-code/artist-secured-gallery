@@ -9,7 +9,6 @@ import TextCard from './TextCard';
 interface Artwork {
   id: string;
   title: string;
-  image_url?: string;
   description?: string;
   medium?: string;
   year?: number;

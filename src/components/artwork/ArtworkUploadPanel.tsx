@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Upload } from 'lucide-react';
@@ -85,7 +86,6 @@ const ArtworkUploadPanel = ({ open, onOpenChange, onUploadSuccess }: ArtworkUplo
           description: description.trim() || null,
           medium: medium.trim() || null,
           year: year ? parseInt(year) : null,
-          image_url: publicUrl,
           user_id: user.id,
           published: true,
           type: 'image',
@@ -268,5 +268,3 @@ const ArtworkUploadPanel = ({ open, onOpenChange, onUploadSuccess }: ArtworkUplo
 };
 
 export default ArtworkUploadPanel;
-
-</initial_code>

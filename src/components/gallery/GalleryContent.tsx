@@ -7,13 +7,14 @@ import { User } from '@supabase/supabase-js';
 interface Artwork {
   id: string;
   title: string;
-  image_url: string;
   description?: string;
   medium?: string;
   year?: number;
   created_at: string;
   user_id: string;
   published?: boolean;
+  type?: string;
+  content?: any;
   profiles?: {
     email: string;
     artist_name?: string;

@@ -7,7 +7,6 @@ interface ImageCardProps {
   artwork: {
     id: string;
     title: string;
-    image_url?: string;
     content?: any;
     description?: string;
     medium?: string;
@@ -26,8 +25,8 @@ interface ImageCardProps {
 }
 
 const ImageCard = ({ artwork, canDelete, onClick, onDelete }: ImageCardProps) => {
-  // Get image URL from either the old image_url field or new content field
-  const imageUrl = artwork.content?.image_url || artwork.image_url;
+  // Get image URL from the content field
+  const imageUrl = artwork.content?.image_url;
 
   return (
     <div 

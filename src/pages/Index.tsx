@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import GalleryHeader from '@/components/gallery/GalleryHeader';
 import GalleryContent from '@/components/gallery/GalleryContent';
 import ArtworkUploadPanel from '@/components/artwork/ArtworkUploadPanel';
-import ArtworkImageDialog from '@/components/artwork/ArtworkImageDialog';
+import ArtworkViewPanel from '@/components/artwork/ArtworkViewPanel';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import { useArtworkData } from '@/hooks/useArtworkData';
 
@@ -13,7 +13,7 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [uploadPanelOpen, setUploadPanelOpen] = useState(false);
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [viewPanelOpen, setViewPanelOpen] = useState(false);
   const [selectedArtwork, setSelectedArtwork] = useState<any>(null);
 
   const isAdmin = user?.email === 'mogmog@gmail.com';
@@ -29,7 +29,7 @@ const Index = () => {
 
   const handleArtworkClick = (artwork: any) => {
     setSelectedArtwork(artwork);
-    setImageDialogOpen(true);
+    setViewPanelOpen(true);
   };
 
   const handleUploadSuccess = () => {
@@ -90,11 +90,12 @@ const Index = () => {
         />
       )}
       
-      {/* Image Dialog for enlarged view */}
-      <ArtworkImageDialog 
-        open={imageDialogOpen} 
-        onOpenChange={setImageDialogOpen}
+      {/* Artwork View Panel for detailed view */}
+      <ArtworkViewPanel 
+        open={viewPanelOpen} 
+        onOpenChange={setViewPanelOpen}
         artwork={selectedArtwork}
+        onArtworkDeleted={handleArtworkDeleted}
       />
     </div>
   );

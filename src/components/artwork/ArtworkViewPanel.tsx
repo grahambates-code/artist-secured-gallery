@@ -14,7 +14,7 @@ import {
   AlertDialogTitle, 
   AlertDialogTrigger 
 } from '@/components/ui/alert-dialog';
-import { Mail, Calendar, Palette, Trash2 } from 'lucide-react';
+import { Mail, Calendar, Palette, Trash2, FileText } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -25,9 +25,10 @@ interface Artwork {
   description: string | null;
   medium: string | null;
   year: number | null;
-  image_url: string;
   created_at: string;
   user_id: string;
+  type?: string;
+  content?: any;
   profiles?: {
     email: string;
     artist_name: string | null;
@@ -48,6 +49,9 @@ const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted }: Art
   if (!artwork) return null;
 
   const isOwner = user && user.id === artwork.user_id;
+  const artworkType = artwork.type || 'image';
+  const imageUrl = artwork.content?.image_url;
+  const textContent = artwork.content?.text;
 
   const handleDeleteArtwork = async () => {
     if (!user || user.id !== artwork.user_id) {
@@ -135,13 +139,27 @@ const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted }: Art
         </SheetHeader>
         
         <div className="mt-8 space-y-8">
-          {/* Artwork Image */}
+          {/* Artwork Content */}
           <div className="w-full">
-            <img 
-              src={artwork.image_url} 
-              alt={artwork.title}
-              className="w-full h-auto max-h-96 object-contain border border-border"
-            />
+            {artworkType === 'image' && imageUrl ? (
+              <img 
+                src={imageUrl} 
+                alt={artwork.title}
+                className="w-full h-auto max-h-96 object-contain border border-border"
+              />
+            ) : artworkType === 'text' && textContent ? (
+              <div className="border border-border p-6 rounded-lg bg-card">
+                <div className="flex items-center gap-2 mb-4">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground font-medium">Text Artwork</span>
+                </div>
+                <div className="prose prose-sm max-w-none">
+                  <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                    {textContent}
+                  </p>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {/* Artwork Details */}

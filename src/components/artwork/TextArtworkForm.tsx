@@ -47,7 +47,6 @@ const TextArtworkForm = ({ onBack, onSuccess }: TextArtworkFormProps) => {
           user_id: user.id,
           published: true,
           type: 'text',
-          image_url: null,
           content: {
             text: textContent.trim()
           }
