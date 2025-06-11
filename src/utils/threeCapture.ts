@@ -41,9 +41,13 @@ export const captureThreeScene = async (
       pointLight.position.set(10, 10, 10);
       scene.add(pointLight);
       
-      // Create cube
+      // Create cube with proper color handling
       const geometry = new THREE.BoxGeometry(2, 2, 2);
-      const material = new THREE.MeshStandardMaterial({ color: threeData.color });
+      
+      // Convert color string to Three.js Color object
+      const color = new THREE.Color(threeData.color);
+      const material = new THREE.MeshStandardMaterial({ color: color });
+      
       const cube = new THREE.Mesh(geometry, material);
       
       // Apply transformations
