@@ -1,4 +1,3 @@
-
 import * as THREE from 'three';
 import { renderQueue } from './renderQueue';
 
@@ -25,7 +24,7 @@ export const captureThreeScene = async (
     renderer.setSize(width, height);
     renderer.setPixelRatio(1);
     
-    // Enable better color output
+    // Disable tone mapping to preserve original colors
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.NoToneMapping;
     renderer.toneMappingExposure = 1.0;
@@ -39,7 +38,7 @@ export const captureThreeScene = async (
       const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
       camera.position.set(0, 0, 5);
       
-      // Add brighter lighting to ensure colors show properly
+      // Use the exact same lighting setup as the interactive mode
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
       scene.add(ambientLight);
       
@@ -47,15 +46,14 @@ export const captureThreeScene = async (
       pointLight.position.set(5, 5, 5);
       scene.add(pointLight);
       
-      // Add a second light from the opposite side
       const pointLight2 = new THREE.PointLight(0xffffff, 0.8, 0);
       pointLight2.position.set(-5, -5, 5);
       scene.add(pointLight2);
       
-      // Create cube with proper color handling
+      // Create cube with exact same material properties as interactive mode
       const geometry = new THREE.BoxGeometry(2, 2, 2);
       
-      // Convert color string to Three.js Color object and ensure it's bright
+      // Use the exact same material settings as the interactive component
       const color = new THREE.Color(threeData.color);
       const material = new THREE.MeshStandardMaterial({ 
         color: color,
@@ -67,17 +65,16 @@ export const captureThreeScene = async (
       
       // Apply transformations
       cube.position.set(threeData.position.x, threeData.position.y, threeData.position.z);
-      cube.rotation.set(threeData.rotation.x, threeData.rotation.y, threeData.rotation.z);
+      cube.rotation.set(
+        threeData.rotation.x + 0.3, 
+        threeData.rotation.y + 0.3, 
+        threeData.rotation.z
+      );
       cube.scale.set(threeData.scale.x, threeData.scale.y, threeData.scale.z);
       
       scene.add(cube);
       
-      // Add a slight rotation for more dynamic look
-      cube.rotation.x += 0.3;
-      cube.rotation.y += 0.3;
-      
-      // Render scene multiple times to ensure proper color output
-      renderer.render(scene, camera);
+      // Render scene once to ensure proper color output
       renderer.render(scene, camera);
       
       // Capture as data URL with maximum quality
