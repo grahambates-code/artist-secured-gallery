@@ -57,8 +57,8 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
   const [hasError, setHasError] = useState(false);
   const [is3DMode, setIs3DMode] = useState(false);
   
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isLongPressRef = useRef(false);
+  const lastTapTimeRef = useRef<number>(0);
+  const doubleTapDelayRef = useRef<NodeJS.Timeout | null>(null);
   
   // Ensure all required properties are present with proper defaults
   const threeData = {
@@ -89,29 +89,31 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
     }
   }, [threeData.color, threeData.position.x, threeData.position.y, threeData.position.z, threeData.rotation.x, threeData.rotation.y, threeData.rotation.z, threeData.scale.x, threeData.scale.y, threeData.scale.z, is3DMode]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    isLongPressRef.current = false;
-    longPressTimerRef.current = setTimeout(() => {
-      isLongPressRef.current = true;
+  const handleClick = (e: React.MouseEvent) => {
+    const currentTime = new Date().getTime();
+    const timeDiff = currentTime - lastTapTimeRef.current;
+    
+    // Check if this is a double tap (within 300ms)
+    if (timeDiff < 300 && timeDiff > 0) {
+      // Double tap detected - toggle 3D mode
       setIs3DMode(!is3DMode);
-    }, 800); // 800ms for long press
-  };
-
-  const handleMouseUp = (e: React.MouseEvent) => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
+      
+      // Clear any pending single tap
+      if (doubleTapDelayRef.current) {
+        clearTimeout(doubleTapDelayRef.current);
+        doubleTapDelayRef.current = null;
+      }
+    } else {
+      // Single tap - delay the onClick to see if there's a second tap
+      doubleTapDelayRef.current = setTimeout(() => {
+        if (!is3DMode) {
+          onClick();
+        }
+        doubleTapDelayRef.current = null;
+      }, 300);
     }
     
-    // Only trigger onClick if it wasn't a long press
-    if (!isLongPressRef.current) {
-      onClick();
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-    }
+    lastTapTimeRef.current = currentTime;
   };
 
   // Prevent event propagation for 3D interactions
@@ -142,16 +144,14 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
       {/* Force square aspect ratio container */}
       <div 
         className="w-full aspect-square relative"
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        onClick={handle3DClick}
+        onClick={handleClick}
       >
         <AspectRatio ratio={1} className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
           {is3DMode ? (
             <Canvas 
               camera={{ position: [0, 0, 5], fov: 75 }}
               className="w-full h-full"
+              onClick={handle3DClick}
             >
               <ambientLight intensity={0.6} />
               <pointLight position={[5, 5, 5]} intensity={1.2} />
@@ -226,7 +226,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
           {!is3DMode && (
             <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
               <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs text-muted-foreground">
-                Long press for 3D mode
+                Double tap for 3D mode
               </div>
             </div>
           )}
