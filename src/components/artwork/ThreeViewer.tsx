@@ -1,9 +1,10 @@
 
-
 import React, { useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +16,7 @@ interface ThreeViewerProps {
   sceneData: {
     position?: { x: number; y: number; z: number };
     rotation?: { x: number; y: number; z: number };
+    scale?: { x: number; y: number; z: number };
     color?: string;
   };
   artworkId?: string;
@@ -25,7 +27,8 @@ interface ThreeViewerProps {
 const DraggableCube = ({ 
   color, 
   position, 
-  rotation, 
+  rotation,
+  scale,
   onPositionChange, 
   isDragging, 
   setIsDragging 
@@ -33,6 +36,7 @@ const DraggableCube = ({
   color: string;
   position: { x: number; y: number; z: number };
   rotation: { x: number; y: number; z: number };
+  scale: { x: number; y: number; z: number };
   onPositionChange: (position: { x: number; y: number; z: number }) => void;
   isDragging: boolean;
   setIsDragging: (dragging: boolean) => void;
@@ -100,6 +104,7 @@ const DraggableCube = ({
       ref={meshRef}
       position={[position.x, position.y, position.z]}
       rotation={[rotation.x, rotation.y, rotation.z]}
+      scale={[scale.x, scale.y, scale.z]}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerMove={handlePointerMove}
@@ -112,17 +117,21 @@ const DraggableCube = ({
   );
 };
 
-const InteractiveCube = ({ color, position, rotation }: {
+const InteractiveCube = ({ color, position, rotation, scale }: {
   color: string;
   position: { x: number; y: number; z: number };
   rotation: { x: number; y: number; z: number };
+  scale: { x: number; y: number; z: number };
 }) => {
   return (
-    <PreviewCube 
-      color={color}
-      position={position}
-      rotation={rotation}
-    />
+    <mesh 
+      position={[position.x, position.y, position.z]}
+      rotation={[rotation.x, rotation.y, rotation.z]}
+      scale={[scale.x, scale.y, scale.z]}
+    >
+      <boxGeometry args={[2, 2, 2]} />
+      <meshStandardMaterial color={color} />
+    </mesh>
   );
 };
 
@@ -133,12 +142,14 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
   const [currentData, setCurrentData] = useState({
     position: { x: 0, y: 0, z: 0 },
     rotation: { x: 0, y: 0, z: 0 },
+    scale: { x: 1, y: 1, z: 1 },
     color: '#00ff00',
     ...sceneData
   });
   const [isEditing, setIsEditing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showSliders, setShowSliders] = useState(false);
 
   const handlePositionChange = (newPosition: { x: number; y: number; z: number }) => {
     console.log('Position change received:', newPosition);
@@ -148,6 +159,24 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
     };
     setCurrentData(updatedData);
     console.log('Updated currentData:', updatedData);
+  };
+
+  const handleSliderChange = (property: string, axis: string, value: number[]) => {
+    const newValue = value[0];
+    setCurrentData(prev => ({
+      ...prev,
+      [property]: {
+        ...prev[property as keyof typeof prev],
+        [axis]: newValue
+      }
+    }));
+  };
+
+  const handleColorChange = (color: string) => {
+    setCurrentData(prev => ({
+      ...prev,
+      color
+    }));
   };
 
   const handleSave = async () => {
@@ -191,6 +220,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
     setCurrentData({
       position: { x: 0, y: 0, z: 0 },
       rotation: { x: 0, y: 0, z: 0 },
+      scale: { x: 1, y: 1, z: 1 },
       color: '#00ff00',
       ...sceneData
     });
@@ -199,7 +229,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
 
   return (
     <div className="space-y-4">
-      <div className="w-full h-96 border border-border rounded-lg overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800">
+      <div className="w-full h-96 border border-border rounded-lg overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 relative">
         <Canvas camera={{ position: [0, 0, 5] }}>
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} />
@@ -209,6 +239,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
               color={currentData.color}
               position={currentData.position}
               rotation={currentData.rotation}
+              scale={currentData.scale || { x: 1, y: 1, z: 1 }}
               onPositionChange={handlePositionChange}
               isDragging={isDragging}
               setIsDragging={setIsDragging}
@@ -218,19 +249,170 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
               color={currentData.color}
               position={currentData.position}
               rotation={currentData.rotation}
+              scale={currentData.scale || { x: 1, y: 1, z: 1 }}
             />
           )}
           
           <OrbitControls enablePan={!isDragging} enabled={!isDragging} />
         </Canvas>
+
+        {/* Overlay Controls */}
+        {showSliders && (
+          <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm p-4 rounded-lg space-y-4 max-w-xs">
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Position</Label>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs w-4">X:</span>
+                  <Slider
+                    value={[currentData.position.x]}
+                    onValueChange={(value) => handleSliderChange('position', 'x', value)}
+                    min={-5}
+                    max={5}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <span className="text-xs w-12">{currentData.position.x.toFixed(1)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs w-4">Y:</span>
+                  <Slider
+                    value={[currentData.position.y]}
+                    onValueChange={(value) => handleSliderChange('position', 'y', value)}
+                    min={-3}
+                    max={3}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <span className="text-xs w-12">{currentData.position.y.toFixed(1)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs w-4">Z:</span>
+                  <Slider
+                    value={[currentData.position.z]}
+                    onValueChange={(value) => handleSliderChange('position', 'z', value)}
+                    min={-2}
+                    max={2}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <span className="text-xs w-12">{currentData.position.z.toFixed(1)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Rotation</Label>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs w-4">X:</span>
+                  <Slider
+                    value={[currentData.rotation.x]}
+                    onValueChange={(value) => handleSliderChange('rotation', 'x', value)}
+                    min={0}
+                    max={Math.PI * 2}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <span className="text-xs w-12">{currentData.rotation.x.toFixed(1)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs w-4">Y:</span>
+                  <Slider
+                    value={[currentData.rotation.y]}
+                    onValueChange={(value) => handleSliderChange('rotation', 'y', value)}
+                    min={0}
+                    max={Math.PI * 2}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <span className="text-xs w-12">{currentData.rotation.y.toFixed(1)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs w-4">Z:</span>
+                  <Slider
+                    value={[currentData.rotation.z]}
+                    onValueChange={(value) => handleSliderChange('rotation', 'z', value)}
+                    min={0}
+                    max={Math.PI * 2}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <span className="text-xs w-12">{currentData.rotation.z.toFixed(1)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Scale</Label>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs w-4">X:</span>
+                  <Slider
+                    value={[(currentData.scale?.x || 1)]}
+                    onValueChange={(value) => handleSliderChange('scale', 'x', value)}
+                    min={0.1}
+                    max={3}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <span className="text-xs w-12">{(currentData.scale?.x || 1).toFixed(1)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs w-4">Y:</span>
+                  <Slider
+                    value={[(currentData.scale?.y || 1)]}
+                    onValueChange={(value) => handleSliderChange('scale', 'y', value)}
+                    min={0.1}
+                    max={3}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <span className="text-xs w-12">{(currentData.scale?.y || 1).toFixed(1)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs w-4">Z:</span>
+                  <Slider
+                    value={[(currentData.scale?.z || 1)]}
+                    onValueChange={(value) => handleSliderChange('scale', 'z', value)}
+                    min={0.1}
+                    max={3}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <span className="text-xs w-12">{(currentData.scale?.z || 1).toFixed(1)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Color</Label>
+              <input
+                type="color"
+                value={currentData.color}
+                onChange={(e) => handleColorChange(e.target.value)}
+                className="w-full h-8 rounded border border-border"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {canEdit && user && (
         <div className="flex gap-2">
           {!isEditing ? (
-            <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
-              Edit Position
-            </Button>
+            <>
+              <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
+                Edit Position
+              </Button>
+              <Button 
+                onClick={() => setShowSliders(!showSliders)} 
+                variant="outline" 
+                size="sm"
+              >
+                {showSliders ? 'Hide' : 'Show'} Test Sliders
+              </Button>
+            </>
           ) : (
             <>
               <Button 
@@ -247,18 +429,28 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
               >
                 Cancel
               </Button>
+              <Button 
+                onClick={() => setShowSliders(!showSliders)} 
+                variant="outline" 
+                size="sm"
+              >
+                {showSliders ? 'Hide' : 'Show'} Test Sliders
+              </Button>
             </>
           )}
         </div>
       )}
 
-      {isEditing && (
+      {(isEditing || showSliders) && (
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            Click and drag the cube to reposition it. Use orbit controls to view from different angles.
+            {isEditing ? 'Click and drag the cube to reposition it. Use orbit controls to view from different angles.' : 'Use sliders to test cube properties.'}
           </p>
           <div className="text-xs text-muted-foreground font-mono bg-muted p-2 rounded">
-            Position: x: {currentData.position.x.toFixed(2)}, y: {currentData.position.y.toFixed(2)}, z: {currentData.position.z.toFixed(2)}
+            Position: x: {currentData.position.x.toFixed(2)}, y: {currentData.position.y.toFixed(2)}, z: {currentData.position.z.toFixed(2)}<br/>
+            Rotation: x: {currentData.rotation.x.toFixed(2)}, y: {currentData.rotation.y.toFixed(2)}, z: {currentData.rotation.z.toFixed(2)}<br/>
+            Scale: x: {(currentData.scale?.x || 1).toFixed(2)}, y: {(currentData.scale?.y || 1).toFixed(2)}, z: {(currentData.scale?.z || 1).toFixed(2)}<br/>
+            Color: {currentData.color}
           </div>
         </div>
       )}

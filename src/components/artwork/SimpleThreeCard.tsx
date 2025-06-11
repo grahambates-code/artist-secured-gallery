@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +32,12 @@ interface SimpleThreeCardProps {
 }
 
 const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeCardProps) => {
-  const threeData = artwork.content || { color: '#00ff00', position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 } };
+  const threeData = artwork.content || { 
+    color: '#00ff00', 
+    position: { x: 0, y: 0, z: 0 }, 
+    rotation: { x: 0, y: 0, z: 0 },
+    scale: { x: 1, y: 1, z: 1 }
+  };
 
   return (
     <Card 
@@ -70,6 +76,16 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
             </Button>
           </div>
         )}
+
+        {/* Debug overlay showing current values */}
+        <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-mono">
+            <div>Pos: {threeData.position.x.toFixed(1)}, {threeData.position.y.toFixed(1)}, {threeData.position.z.toFixed(1)}</div>
+            {threeData.scale && (
+              <div>Scale: {threeData.scale.x.toFixed(1)}, {threeData.scale.y.toFixed(1)}, {threeData.scale.z.toFixed(1)}</div>
+            )}
+          </div>
+        </div>
       </div>
 
       <CardContent className="p-4">
@@ -94,6 +110,16 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
             <span className="font-mono text-xs bg-muted px-2 py-1 rounded text-muted-foreground font-light">
               Interactive 3D Cube
             </span>
+          </div>
+
+          {/* Show current cube properties */}
+          <div className="text-xs text-muted-foreground font-mono bg-muted/50 p-2 rounded space-y-1">
+            <div>Position: ({threeData.position.x.toFixed(2)}, {threeData.position.y.toFixed(2)}, {threeData.position.z.toFixed(2)})</div>
+            <div>Rotation: ({threeData.rotation.x.toFixed(2)}, {threeData.rotation.y.toFixed(2)}, {threeData.rotation.z.toFixed(2)})</div>
+            {threeData.scale && (
+              <div>Scale: ({threeData.scale.x.toFixed(2)}, {threeData.scale.y.toFixed(2)}, {threeData.scale.z.toFixed(2)})</div>
+            )}
+            <div>Color: {threeData.color}</div>
           </div>
           
           <div className="flex items-center gap-2">
