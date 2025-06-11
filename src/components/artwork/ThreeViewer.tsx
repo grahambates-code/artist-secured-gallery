@@ -180,13 +180,34 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
 
   const handleSliderChange = (property: string, axis: string, value: number[]) => {
     const newValue = value[0];
-    setCurrentData(prev => ({
-      ...prev,
-      [property]: {
-        ...prev[property as keyof typeof prev],
-        [axis]: newValue
+    setCurrentData(prev => {
+      if (property === 'position') {
+        return {
+          ...prev,
+          position: {
+            ...prev.position,
+            [axis]: newValue
+          }
+        };
+      } else if (property === 'rotation') {
+        return {
+          ...prev,
+          rotation: {
+            ...prev.rotation,
+            [axis]: newValue
+          }
+        };
+      } else if (property === 'scale') {
+        return {
+          ...prev,
+          scale: {
+            ...prev.scale,
+            [axis]: newValue
+          }
+        };
       }
-    }));
+      return prev;
+    });
   };
 
   const handleColorChange = (color: string) => {
