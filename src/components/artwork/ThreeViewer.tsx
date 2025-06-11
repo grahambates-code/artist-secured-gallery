@@ -83,13 +83,15 @@ const DraggableCube = ({
       
       meshRef.current.position.copy(newPosition);
       
-      // Update position in real-time during drag
-      console.log('Dragging to position:', newPosition);
-      onPositionChange({
+      // Update position in real-time during drag - this will update the display immediately
+      const roundedPosition = {
         x: parseFloat(newPosition.x.toFixed(2)),
         y: parseFloat(newPosition.y.toFixed(2)),
         z: parseFloat(newPosition.z.toFixed(2))
-      });
+      };
+      
+      console.log('Dragging to position:', roundedPosition);
+      onPositionChange(roundedPosition);
     }
   };
 
@@ -265,4 +267,3 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
 };
 
 export default ThreeViewer;
-
