@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -468,5 +469,3 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
 };
 
 export default ThreeViewer;
-
-}
