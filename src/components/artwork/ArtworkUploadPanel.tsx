@@ -268,3 +268,5 @@ const ArtworkUploadPanel = ({ open, onOpenChange, onUploadSuccess }: ArtworkUplo
 };
 
 export default ArtworkUploadPanel;
+
+</initial_code>
