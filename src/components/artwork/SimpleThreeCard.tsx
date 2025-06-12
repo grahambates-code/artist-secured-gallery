@@ -1,9 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trash2, Image } from 'lucide-react';
-import { captureThreeScene } from '@/utils/threeCapture';
 
 interface Artwork {
   id: string;
@@ -30,87 +29,25 @@ interface SimpleThreeCardProps {
 }
 
 const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeCardProps) => {
-  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
-  const [isCapturing, setIsCapturing] = useState(false);
-  const [captureError, setCaptureError] = useState(false);
-
-  useEffect(() => {
-    const captureScreenshot = async () => {
-      if (!artwork.content || screenshotUrl || isCapturing) {
-        console.log('Skipping capture:', {
-          hasContent: !!artwork.content,
-          hasScreenshot: !!screenshotUrl,
-          isCapturing
-        });
-        return;
-      }
-      
-      console.log('Starting capture for artwork:', artwork.id, artwork.content);
-      setIsCapturing(true);
-      setCaptureError(false);
-      
-      try {
-        console.log('Calling captureThreeScene directly...');
-        
-        // Use smaller dimensions for card display - 256x256 should be sufficient
-        const screenshot = await captureThreeScene(artwork.content, 256, 256);
-        
-        console.log('Capture result:', screenshot ? 'success' : 'failed');
-        
-        if (screenshot) {
-          setScreenshotUrl(screenshot);
-          console.log('Screenshot captured successfully for:', artwork.id);
-        } else {
-          console.error('Screenshot capture returned null/undefined');
-          throw new Error('Failed to capture screenshot - no data returned');
-        }
-      } catch (error) {
-        console.error('Error capturing screenshot for artwork', artwork.id, ':', error);
-        setCaptureError(true);
-      } finally {
-        console.log('Capture process completed for:', artwork.id);
-        setIsCapturing(false);
-      }
-    };
-
-    // Small delay to avoid overwhelming the system
-    const timer = setTimeout(captureScreenshot, Math.random() * 1000);
-    return () => clearTimeout(timer);
-  }, [artwork.content, artwork.id, screenshotUrl, isCapturing]);
-
   const renderPreview = () => {
-    if (isCapturing) {
-      return (
-        <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-          <div className="text-white/60 text-sm animate-pulse">Capturing...</div>
-        </div>
-      );
-    }
-
-    if (captureError) {
-      return (
-        <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-          <div className="text-white/60 text-sm flex items-center gap-2">
-            <Image className="w-4 h-4" />
-            3D Scene
-          </div>
-        </div>
-      );
-    }
-
-    if (screenshotUrl) {
+    // Check if we have a screenshot image URL
+    if (artwork.content?.image_url) {
       return (
         <img 
-          src={screenshotUrl} 
+          src={artwork.content.image_url} 
           alt={artwork.title}
           className="w-full h-full object-cover object-center transition-all duration-500 ease-out group-hover:scale-[1.02] group-hover:contrast-110"
         />
       );
     }
 
+    // Fallback for older 3D scenes without screenshots
     return (
       <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-white/60 text-sm">Loading...</div>
+        <div className="text-white/60 text-sm flex items-center gap-2">
+          <Image className="w-4 h-4" />
+          3D Scene
+        </div>
       </div>
     );
   };

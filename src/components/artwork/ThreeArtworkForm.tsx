@@ -35,6 +35,8 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
     cameraTarget: { x: 0, y: 0, z: 0 }
   });
 
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
   const handleColorChange = (color: string) => {
     setCubeColor(color);
     setSceneData(prev => ({
@@ -45,6 +47,107 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
 
   const handleSceneUpdate = (newData: any) => {
     setSceneData(newData);
+  };
+
+  const captureScreenshot = async (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      // Create an off-screen canvas for screenshot
+      const screenshotCanvas = document.createElement('canvas');
+      screenshotCanvas.width = 512;
+      screenshotCanvas.height = 512;
+      
+      const renderer = new THREE.WebGLRenderer({
+        canvas: screenshotCanvas,
+        antialias: true,
+        preserveDrawingBuffer: true
+      });
+      
+      renderer.setSize(512, 512);
+      renderer.setPixelRatio(1);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x1e293b);
+      
+      // Create camera
+      const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+      camera.position.set(sceneData.cameraPosition.x, sceneData.cameraPosition.y, sceneData.cameraPosition.z);
+      
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+      
+      const pointLight = new THREE.PointLight(0xffffff, 1.2, 0);
+      pointLight.position.set(5, 5, 5);
+      scene.add(pointLight);
+      
+      const pointLight2 = new THREE.PointLight(0xffffff, 0.8, 0);
+      pointLight2.position.set(-5, -5, 5);
+      scene.add(pointLight2);
+      
+      // Create cube
+      const geometry = new THREE.BoxGeometry(2, 2, 2);
+      const material = new THREE.MeshStandardMaterial({ 
+        color: new THREE.Color(sceneData.color),
+        metalness: 0.1,
+        roughness: 0.4
+      });
+      
+      const cube = new THREE.Mesh(geometry, material);
+      cube.position.set(sceneData.position.x, sceneData.position.y, sceneData.position.z);
+      cube.rotation.set(sceneData.rotation.x, sceneData.rotation.y, sceneData.rotation.z);
+      scene.add(cube);
+      
+      // Render and capture
+      renderer.render(scene, camera);
+      
+      // Convert to blob
+      screenshotCanvas.toBlob((blob) => {
+        if (blob) {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        } else {
+          reject(new Error('Failed to create screenshot blob'));
+        }
+      }, 'image/png');
+      
+      // Cleanup
+      geometry.dispose();
+      material.dispose();
+      renderer.dispose();
+    });
+  };
+
+  const uploadScreenshot = async (dataUrl: string): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
+    
+    // Convert data URL to blob
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    
+    // Generate filename
+    const fileName = `${user.id}/threejs-${Date.now()}.png`;
+    
+    // Upload to Supabase storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('artwork-images')
+      .upload(fileName, blob, {
+        metadata: {
+          user_id: user.id,
+          type: 'threejs-screenshot'
+        }
+      });
+
+    if (uploadError) throw uploadError;
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('artwork-images')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,6 +163,13 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
 
     setUploading(true);
     try {
+      console.log('Capturing screenshot...');
+      const screenshotDataUrl = await captureScreenshot();
+      
+      console.log('Uploading screenshot...');
+      const imageUrl = await uploadScreenshot(screenshotDataUrl);
+      
+      console.log('Saving artwork to database...');
       const { error } = await supabase
         .from('artwork')
         .insert({
@@ -70,7 +180,10 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
           user_id: user.id,
           published: true,
           type: 'threejs',
-          content: sceneData
+          content: {
+            ...sceneData,
+            image_url: imageUrl
+          }
         });
 
       if (error) throw error;
