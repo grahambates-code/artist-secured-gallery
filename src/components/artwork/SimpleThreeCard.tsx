@@ -46,7 +46,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
         console.log('Capturing screenshot for artwork:', artwork.id);
         
         const screenshot = await renderQueue.add(() => 
-          captureThreeScene(artwork.content, { width: 400, height: 400 })
+          captureThreeScene(artwork.content, 400, 400)
         );
         
         if (screenshot) {
