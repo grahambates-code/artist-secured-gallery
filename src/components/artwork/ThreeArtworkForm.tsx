@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -9,38 +10,13 @@ import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import PreviewCube from './PreviewCube';
+import ThreeViewer2 from './ThreeViewer2';
 import * as THREE from 'three';
 
 interface ThreeArtworkFormProps {
   onBack: () => void;
   onSuccess: () => void;
 }
-
-// Interactive Cube Component for the form
-const InteractiveCube = ({ color, onPositionChange, onRotationChange }: {
-  color: string;
-  onPositionChange: (position: THREE.Vector3) => void;
-  onRotationChange: (rotation: THREE.Euler) => void;
-}) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useEffect(() => {
-    const mesh = meshRef.current;
-    if (mesh) {
-      onPositionChange(mesh.position);
-      onRotationChange(mesh.rotation);
-    }
-  }, [onPositionChange, onRotationChange]);
-
-  return (
-    <PreviewCube 
-      color={color}
-      position={{ x: 0, y: 0, z: 0 }}
-      rotation={{ x: 0, y: 0, z: 0 }}
-    />
-  );
-};
 
 const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
   const { user } = useAuth();
@@ -54,22 +30,10 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
   const [sceneData, setSceneData] = useState({
     position: { x: 0, y: 0, z: 0 },
     rotation: { x: 0, y: 0, z: 0 },
-    color: '#00ff00'
+    color: '#00ff00',
+    cameraPosition: { x: 0, y: 0, z: 5 },
+    cameraTarget: { x: 0, y: 0, z: 0 }
   });
-
-  const handlePositionChange = (position: THREE.Vector3) => {
-    setSceneData(prev => ({
-      ...prev,
-      position: { x: position.x, y: position.y, z: position.z }
-    }));
-  };
-
-  const handleRotationChange = (rotation: THREE.Euler) => {
-    setSceneData(prev => ({
-      ...prev,
-      rotation: { x: rotation.x, y: rotation.y, z: rotation.z }
-    }));
-  };
 
   const handleColorChange = (color: string) => {
     setCubeColor(color);
@@ -77,6 +41,10 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
       ...prev,
       color
     }));
+  };
+
+  const handleSceneUpdate = (newData: any) => {
+    setSceneData(newData);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,23 +104,20 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
         <h3 className="text-lg font-medium">Create 3D Scene</h3>
       </div>
 
-      {/* 3D Canvas Preview */}
+      {/* 3D Scene Preview */}
       <div className="space-y-2">
         <Label>3D Scene Preview</Label>
         <div className="border rounded-lg overflow-hidden" style={{ height: '300px' }}>
-          <Canvas camera={{ position: [0, 0, 5] }}>
-            <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} />
-            <InteractiveCube 
-              color={cubeColor}
-              onPositionChange={handlePositionChange}
-              onRotationChange={handleRotationChange}
-            />
-            <OrbitControls enablePan={false} />
-          </Canvas>
+          <ThreeViewer2
+            sceneData={sceneData}
+            size="medium"
+            showControls={true}
+            canEdit={true}
+            onSceneUpdate={handleSceneUpdate}
+          />
         </div>
         <p className="text-sm text-muted-foreground">
-          Use your mouse to rotate the cube. The position and rotation will be saved with your artwork.
+          Use your mouse to rotate and position the cube. The position and rotation will be saved with your artwork.
         </p>
       </div>
 
