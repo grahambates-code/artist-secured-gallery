@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, Calendar, User, Box, Loader } from 'lucide-react';
+import { Trash2, Calendar, User, Box } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { getCachedThreeCapture } from '@/utils/threeCapture';
 import UnifiedThreeCube from './UnifiedThreeCube';
 
 interface Artwork {
@@ -34,9 +34,6 @@ interface SimpleThreeCardProps {
 }
 
 const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeCardProps) => {
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [isCapturing, setIsCapturing] = useState(true);
-  const [hasError, setHasError] = useState(false);
   const [is3DMode, setIs3DMode] = useState(false);
   
   const lastTapTimeRef = useRef<number>(0);
@@ -55,26 +52,6 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
     ...defaultData,
     ...artwork.content
   };
-
-  useEffect(() => {
-    const captureScene = async () => {
-      try {
-        setIsCapturing(true);
-        setHasError(false);
-        const imageData = await getCachedThreeCapture(threeData);
-        setCapturedImage(imageData);
-      } catch (error) {
-        console.error('Failed to capture Three.js scene:', error);
-        setHasError(true);
-      } finally {
-        setIsCapturing(false);
-      }
-    };
-
-    if (!is3DMode) {
-      captureScene();
-    }
-  }, [threeData.color, threeData.position.x, threeData.position.y, threeData.position.z, threeData.rotation.x, threeData.rotation.y, threeData.rotation.z, threeData.scale.x, threeData.scale.y, threeData.scale.z, threeData.cameraPosition.x, threeData.cameraPosition.y, threeData.cameraPosition.z, is3DMode]);
 
   const handleClick = (e: React.MouseEvent) => {
     const currentTime = new Date().getTime();
@@ -110,19 +87,6 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
     }
   };
 
-  // Fallback component for when capture fails
-  const ThreeFallback = () => (
-    <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-      <div className="text-center">
-        <Box className="h-12 w-12 mx-auto text-white mb-2" />
-        <p className="text-white text-sm">3D Preview</p>
-        <p className="text-white/70 text-xs">
-          {isCapturing ? 'Rendering...' : 'Preview Unavailable'}
-        </p>
-      </div>
-    </div>
-  );
-
   return (
     <Card 
       className="gallery-card group hover:bg-accent/50 transition-colors relative"
@@ -134,55 +98,40 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
         onClick={handleClick}
       >
         <AspectRatio ratio={1} className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
-          {is3DMode ? (
-            <Canvas 
-              camera={{ 
-                position: [threeData.cameraPosition.x, threeData.cameraPosition.y, threeData.cameraPosition.z], 
-                fov: 75,
-                aspect: 1,
-                near: 0.1,
-                far: 1000
-              }}
-              className="w-full h-full"
-              onClick={handle3DClick}
-            >
-              <ambientLight intensity={0.6} />
-              <pointLight position={[5, 5, 5]} intensity={1.2} />
-              <pointLight position={[-5, -5, 5]} intensity={0.8} />
-              
-              <UnifiedThreeCube 
-                color={threeData.color}
-                position={threeData.position}
-                rotation={threeData.rotation}
-                scale={threeData.scale}
-                cameraPosition={threeData.cameraPosition}
-                isEditable={false}
-              />
-              
-              <OrbitControls 
-                enablePan={true}
-                enableRotate={true}
-                enableZoom={true}
-                enableDamping={true}
-                dampingFactor={0.05}
-                target={[threeData.position.x, threeData.position.y, threeData.position.z]}
-              />
-            </Canvas>
-          ) : (
-            <>
-              {hasError || (!capturedImage && !isCapturing) ? (
-                <ThreeFallback />
-              ) : capturedImage ? (
-                <img 
-                  src={capturedImage} 
-                  alt={`3D Scene: ${artwork.title}`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <ThreeFallback />
-              )}
-            </>
-          )}
+          <Canvas 
+            camera={{ 
+              position: [threeData.cameraPosition.x, threeData.cameraPosition.y, threeData.cameraPosition.z], 
+              fov: 75,
+              aspect: 1,
+              near: 0.1,
+              far: 1000
+            }}
+            className="w-full h-full"
+            onClick={handle3DClick}
+          >
+            <ambientLight intensity={0.6} />
+            <pointLight position={[5, 5, 5]} intensity={1.2} />
+            <pointLight position={[-5, -5, 5]} intensity={0.8} />
+            
+            <UnifiedThreeCube 
+              color={threeData.color}
+              position={threeData.position}
+              rotation={threeData.rotation}
+              scale={threeData.scale}
+              cameraPosition={threeData.cameraPosition}
+              isEditable={false}
+            />
+            
+            <OrbitControls 
+              enablePan={true}
+              enableRotate={true}
+              enableZoom={true}
+              enableDamping={true}
+              dampingFactor={0.05}
+              target={[threeData.position.x, threeData.position.y, threeData.position.z]}
+              enabled={is3DMode}
+            />
+          </Canvas>
           
           {/* Mode indicator badges */}
           <div className="absolute top-2 right-2 flex gap-1">
@@ -192,20 +141,9 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
                 Interactive 3D
               </Badge>
             )}
-            {!is3DMode && isCapturing && (
-              <Badge variant="secondary" className="bg-orange-500/80 text-white font-light text-xs flex items-center gap-1">
-                <Loader className="h-3 w-3 animate-spin" />
-                Rendering
-              </Badge>
-            )}
-            {!is3DMode && capturedImage && !isCapturing && (
+            {!is3DMode && (
               <Badge variant="outline" className="bg-green-500/80 text-white font-light text-xs">
-                Image
-              </Badge>
-            )}
-            {!is3DMode && !capturedImage && !isCapturing && (
-              <Badge variant="outline" className="bg-background/80 text-foreground font-light text-xs">
-                3D Scene
+                Static View
               </Badge>
             )}
           </div>
@@ -232,16 +170,14 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
             </div>
           )}
 
-          {/* Debug overlay showing current values - only in non-3D mode */}
-          {!is3DMode && (
-            <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-mono">
-                <div>Pos: {threeData.position.x.toFixed(1)}, {threeData.position.y.toFixed(1)}, {threeData.position.z.toFixed(1)}</div>
-                <div>Scale: {threeData.scale.x.toFixed(1)}, {threeData.scale.y.toFixed(1)}, {threeData.scale.z.toFixed(1)}</div>
-                <div>Cam: {threeData.cameraPosition.x.toFixed(1)}, {threeData.cameraPosition.y.toFixed(1)}, {threeData.cameraPosition.z.toFixed(1)}</div>
-              </div>
+          {/* Debug overlay showing current values */}
+          <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-mono">
+              <div>Pos: {threeData.position.x.toFixed(1)}, {threeData.position.y.toFixed(1)}, {threeData.position.z.toFixed(1)}</div>
+              <div>Scale: {threeData.scale.x.toFixed(1)}, {threeData.scale.y.toFixed(1)}, {threeData.scale.z.toFixed(1)}</div>
+              <div>Cam: {threeData.cameraPosition.x.toFixed(1)}, {threeData.cameraPosition.y.toFixed(1)}, {threeData.cameraPosition.z.toFixed(1)}</div>
             </div>
-          )}
+          </div>
         </AspectRatio>
       </div>
 
