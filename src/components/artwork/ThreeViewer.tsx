@@ -17,6 +17,7 @@ interface ThreeViewerProps {
     scale?: { x: number; y: number; z: number };
     color?: string;
     cameraPosition?: { x: number; y: number; z: number };
+    cameraTarget?: { x: number; y: number; z: number };
   };
   artworkId?: string;
   canEdit?: boolean;
@@ -35,7 +36,8 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
     rotation: { x: 0, y: 0, z: 0 },
     scale: { x: 1, y: 1, z: 1 },
     color: '#00ff00',
-    cameraPosition: { x: 0, y: 0, z: 5 }
+    cameraPosition: { x: 0, y: 0, z: 5 },
+    cameraTarget: { x: 0, y: 0, z: 0 }
   };
   
   const initializeData = () => {
@@ -48,7 +50,8 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
       rotation: sceneData.rotation || defaultData.rotation,
       scale: sceneData.scale || defaultData.scale,
       color: sceneData.color || defaultData.color,
-      cameraPosition: sceneData.cameraPosition || defaultData.cameraPosition
+      cameraPosition: sceneData.cameraPosition || defaultData.cameraPosition,
+      cameraTarget: sceneData.cameraTarget || defaultData.cameraTarget
     };
   };
     
@@ -81,17 +84,29 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
   };
 
   const handleCameraChange = () => {
-    if (cameraRef.current && isEditing) {
+    if (cameraRef.current && controlsRef.current && isEditing) {
       const camera = cameraRef.current;
+      const controls = controlsRef.current;
+      
       const updatedData = {
         ...currentData,
         cameraPosition: {
           x: parseFloat(camera.position.x.toFixed(2)),
           y: parseFloat(camera.position.y.toFixed(2)),
           z: parseFloat(camera.position.z.toFixed(2))
+        },
+        cameraTarget: {
+          x: parseFloat(controls.target.x.toFixed(2)),
+          y: parseFloat(controls.target.y.toFixed(2)),
+          z: parseFloat(controls.target.z.toFixed(2))
         }
       };
       setCurrentData(updatedData);
+      
+      console.log('Camera state updated:', {
+        position: updatedData.cameraPosition,
+        target: updatedData.cameraTarget
+      });
     }
   };
 
@@ -100,6 +115,8 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
 
     setIsSaving(true);
     try {
+      console.log('Saving scene data:', currentData);
+      
       const { error } = await supabase
         .from('artwork')
         .update({ content: currentData })
@@ -171,6 +188,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
               enablePan={true} 
               enableRotate={true}
               enableZoom={true}
+              target={[currentData.cameraTarget.x, currentData.cameraTarget.y, currentData.cameraTarget.z]}
               onChange={handleCameraChange}
             />
           </Canvas>
@@ -214,6 +232,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
             Rotation: x: {currentData.rotation.x.toFixed(2)}, y: {currentData.rotation.y.toFixed(2)}, z: {currentData.rotation.z.toFixed(2)}<br/>
             Scale: x: {(currentData.scale?.x || 1).toFixed(2)}, y: {(currentData.scale?.y || 1).toFixed(2)}, z: {(currentData.scale?.z || 1).toFixed(2)}<br/>
             Camera: x: {currentData.cameraPosition.x.toFixed(2)}, y: {currentData.cameraPosition.y.toFixed(2)}, z: {currentData.cameraPosition.z.toFixed(2)}<br/>
+            Target: x: {currentData.cameraTarget.x.toFixed(2)}, y: {currentData.cameraTarget.y.toFixed(2)}, z: {currentData.cameraTarget.z.toFixed(2)}<br/>
             Color: {currentData.color}
           </div>
         </div>

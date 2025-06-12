@@ -45,7 +45,8 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
     rotation: { x: 0, y: 0, z: 0 },
     scale: { x: 1, y: 1, z: 1 },
     color: '#00ff00',
-    cameraPosition: { x: 0, y: 0, z: 5 }
+    cameraPosition: { x: 0, y: 0, z: 5 },
+    cameraTarget: { x: 0, y: 0, z: 0 }
   };
 
   const threeData = {
@@ -128,7 +129,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
               enableZoom={true}
               enableDamping={true}
               dampingFactor={0.05}
-              target={[threeData.position.x, threeData.position.y, threeData.position.z]}
+              target={[threeData.cameraTarget?.x || 0, threeData.cameraTarget?.y || 0, threeData.cameraTarget?.z || 0]}
               enabled={is3DMode}
             />
           </Canvas>
@@ -176,6 +177,9 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
               <div>Pos: {threeData.position.x.toFixed(1)}, {threeData.position.y.toFixed(1)}, {threeData.position.z.toFixed(1)}</div>
               <div>Scale: {threeData.scale.x.toFixed(1)}, {threeData.scale.y.toFixed(1)}, {threeData.scale.z.toFixed(1)}</div>
               <div>Cam: {threeData.cameraPosition.x.toFixed(1)}, {threeData.cameraPosition.y.toFixed(1)}, {threeData.cameraPosition.z.toFixed(1)}</div>
+              {threeData.cameraTarget && (
+                <div>Target: {threeData.cameraTarget.x.toFixed(1)}, {threeData.cameraTarget.y.toFixed(1)}, {threeData.cameraTarget.z.toFixed(1)}</div>
+              )}
             </div>
           </div>
         </AspectRatio>
