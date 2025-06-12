@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import sharp from 'https://deno.land/x/sharp@0.32.6/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -53,20 +52,21 @@ serve(async (req) => {
     // Convert blob to array buffer
     const arrayBuffer = await imageData.arrayBuffer();
     
-    // Use Sharp to crop the image
-    const croppedImageBuffer = await sharp(new Uint8Array(arrayBuffer))
-      .extract({ 
-        left: x, 
-        top: y, 
-        width: width, 
-        height: height 
-      })
-      .jpeg({ quality: 90 })
-      .toBuffer();
+    // Use ImageScript for image processing (works in Deno)
+    const { decode, encode, crop } = await import('https://deno.land/x/imagescript@1.2.15/mod.ts');
+    
+    // Decode the image
+    const image = decode(new Uint8Array(arrayBuffer));
+    
+    // Crop the image
+    const croppedImage = crop(image, x, y, width, height);
+    
+    // Encode back to JPEG
+    const croppedBuffer = encode(croppedImage, 'jpeg', 90);
 
-    console.log(`Successfully cropped image. Original size: ${arrayBuffer.byteLength}, Cropped size: ${croppedImageBuffer.length}`);
+    console.log(`Successfully cropped image. Original size: ${arrayBuffer.byteLength}, Cropped size: ${croppedBuffer.length}`);
 
-    return new Response(croppedImageBuffer, {
+    return new Response(croppedBuffer, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'image/jpeg',
