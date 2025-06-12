@@ -42,6 +42,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
           sceneData={artwork.content}
           size="small"
           showControls={false}
+          canEdit={false}
           className="pointer-events-none"
         />
         

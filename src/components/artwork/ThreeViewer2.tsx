@@ -71,48 +71,63 @@ const ThreeViewer2 = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const handlePositionChange = (newPosition: { x: number; y: number; z: number }) => {
+    if (!isEditing) return;
     const updatedData = {
       ...currentData,
       position: newPosition
     };
     setCurrentData(updatedData);
+    if (onSceneUpdate && !artworkId) {
+      onSceneUpdate(updatedData);
+    }
   };
 
   const handleRotationChange = (newRotation: { x: number; y: number; z: number }) => {
+    if (!isEditing) return;
     const updatedData = {
       ...currentData,
       rotation: newRotation
     };
     setCurrentData(updatedData);
+    if (onSceneUpdate && !artworkId) {
+      onSceneUpdate(updatedData);
+    }
   };
 
   const handleScaleChange = (newScale: { x: number; y: number; z: number }) => {
+    if (!isEditing) return;
     const updatedData = {
       ...currentData,
       scale: newScale
     };
     setCurrentData(updatedData);
+    if (onSceneUpdate && !artworkId) {
+      onSceneUpdate(updatedData);
+    }
   };
 
   const handleCameraChange = () => {
-    if (cameraRef.current && controlsRef.current && isEditing) {
-      const camera = cameraRef.current;
-      const controls = controlsRef.current;
-      
-      const updatedData = {
-        ...currentData,
-        cameraPosition: {
-          x: parseFloat(camera.position.x.toFixed(2)),
-          y: parseFloat(camera.position.y.toFixed(2)),
-          z: parseFloat(camera.position.z.toFixed(2))
-        },
-        cameraTarget: {
-          x: parseFloat(controls.target.x.toFixed(2)),
-          y: parseFloat(controls.target.y.toFixed(2)),
-          z: parseFloat(controls.target.z.toFixed(2))
-        }
-      };
-      setCurrentData(updatedData);
+    if (!isEditing || !cameraRef.current || !controlsRef.current) return;
+    
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+    
+    const updatedData = {
+      ...currentData,
+      cameraPosition: {
+        x: parseFloat(camera.position.x.toFixed(2)),
+        y: parseFloat(camera.position.y.toFixed(2)),
+        z: parseFloat(camera.position.z.toFixed(2))
+      },
+      cameraTarget: {
+        x: parseFloat(controls.target.x.toFixed(2)),
+        y: parseFloat(controls.target.y.toFixed(2)),
+        z: parseFloat(controls.target.z.toFixed(2))
+      }
+    };
+    setCurrentData(updatedData);
+    if (onSceneUpdate && !artworkId) {
+      onSceneUpdate(updatedData);
     }
   };
 
@@ -135,7 +150,9 @@ const ThreeViewer2 = ({
         description: "Your 3D scene changes have been saved"
       });
 
+      // Invalidate and refetch artwork queries
       queryClient.invalidateQueries({ queryKey: ['artwork'] });
+      queryClient.refetchQueries({ queryKey: ['artwork'] });
 
       setIsEditing(false);
       if (onSceneUpdate) {
@@ -169,6 +186,9 @@ const ThreeViewer2 = ({
     }
   };
 
+  // Determine if controls should be enabled
+  const controlsEnabled = isEditing && canEdit;
+
   return (
     <div className={`space-y-4 ${className}`}>
       <div className={`${getSizeClasses()} mx-auto`}>
@@ -193,7 +213,7 @@ const ThreeViewer2 = ({
               rotation={currentData.rotation}
               scale={currentData.scale}
               cameraPosition={currentData.cameraPosition}
-              isEditable={isEditing}
+              isEditable={controlsEnabled}
               onPositionChange={handlePositionChange}
               onRotationChange={handleRotationChange}
               onScaleChange={handleScaleChange}
@@ -201,10 +221,10 @@ const ThreeViewer2 = ({
             
             <OrbitControls 
               ref={controlsRef}
-              enabled={true}
-              enablePan={true} 
-              enableRotate={true}
-              enableZoom={true}
+              enabled={controlsEnabled}
+              enablePan={controlsEnabled} 
+              enableRotate={controlsEnabled}
+              enableZoom={controlsEnabled}
               target={[currentData.cameraTarget.x, currentData.cameraTarget.y, currentData.cameraTarget.z]}
               onChange={handleCameraChange}
             />
