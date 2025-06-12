@@ -20,10 +20,8 @@ export const captureThreeScene = async (
   return renderQueue.add(async () => {
     console.log('Inside render queue task, creating renderer...');
     
-    // Create off-screen renderer with explicit canvas
+    // Create off-screen canvas with exact dimensions
     const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
     
     const renderer = new THREE.WebGLRenderer({
       canvas: canvas,
@@ -34,9 +32,21 @@ export const captureThreeScene = async (
     });
     
     console.log('Renderer created, setting size and viewport...');
-    renderer.setSize(width, height, false); // false = don't update style
-    renderer.setViewport(0, 0, width, height);
+    
+    // Set pixel ratio to 1 first to avoid scaling issues
     renderer.setPixelRatio(1);
+    
+    // Set size with updateStyle=false to prevent CSS scaling
+    renderer.setSize(width, height, false);
+    
+    // Manually set canvas dimensions to ensure they match exactly
+    canvas.width = width;
+    canvas.height = height;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    
+    // Set viewport to match canvas exactly
+    renderer.setViewport(0, 0, width, height);
     
     // Disable tone mapping to preserve original colors
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -50,10 +60,11 @@ export const captureThreeScene = async (
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x1e293b); // slate-800
       
-      // Create camera with saved position or default
+      // Create camera with correct aspect ratio
       const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
       const cameraPos = threeData.cameraPosition || { x: 0, y: 0, z: 5 };
       camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
+      camera.updateProjectionMatrix();
       
       console.log('Adding lights...');
       
@@ -106,7 +117,11 @@ export const captureThreeScene = async (
       const gl = renderer.getContext();
       gl.finish();
       
-      // Capture as data URL with maximum quality, specifying exact canvas dimensions
+      // Verify canvas dimensions before capture
+      console.log('Canvas actual dimensions:', canvas.width, 'x', canvas.height);
+      console.log('Canvas style dimensions:', canvas.style.width, 'x', canvas.style.height);
+      
+      // Capture as data URL with maximum quality
       const dataURL = canvas.toDataURL('image/png', 1.0);
       
       console.log('Data URL captured, length:', dataURL.length, 'canvas size:', canvas.width, 'x', canvas.height);
