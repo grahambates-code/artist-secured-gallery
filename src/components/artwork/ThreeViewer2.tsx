@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -9,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import UnifiedThreeCube from './UnifiedThreeCube';
+import * as THREE from 'three';
 
 interface ThreeViewer2Props {
   sceneData: {
@@ -70,6 +70,7 @@ const ThreeViewer2 = ({
   const [currentData, setCurrentData] = useState(initializedData);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTakingScreenshot, setIsTakingScreenshot] = useState(false);
 
   // Update currentData when sceneData changes (but not when edit mode changes)
   useEffect(() => {
@@ -147,12 +148,193 @@ const ThreeViewer2 = ({
     }
   };
 
+  const captureScreenshot = async (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      console.log('Starting screenshot capture...');
+      
+      // Create an off-screen canvas for screenshot
+      const screenshotCanvas = document.createElement('canvas');
+      screenshotCanvas.width = 512;
+      screenshotCanvas.height = 512;
+      
+      const renderer = new THREE.WebGLRenderer({
+        canvas: screenshotCanvas,
+        antialias: true,
+        preserveDrawingBuffer: true,
+        alpha: false
+      });
+      
+      renderer.setSize(512, 512);
+      renderer.setPixelRatio(1);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.setClearColor(0x1e293b, 1);
+      
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x1e293b);
+      
+      // Create camera
+      const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+      camera.position.set(currentData.cameraPosition.x, currentData.cameraPosition.y, currentData.cameraPosition.z);
+      camera.lookAt(currentData.cameraTarget.x, currentData.cameraTarget.y, currentData.cameraTarget.z);
+      
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+      
+      const pointLight = new THREE.PointLight(0xffffff, 1.2, 0);
+      pointLight.position.set(5, 5, 5);
+      scene.add(pointLight);
+      
+      const pointLight2 = new THREE.PointLight(0xffffff, 0.8, 0);
+      pointLight2.position.set(-5, -5, 5);
+      scene.add(pointLight2);
+      
+      // Create cube
+      const geometry = new THREE.BoxGeometry(2, 2, 2);
+      const material = new THREE.MeshStandardMaterial({ 
+        color: new THREE.Color(currentData.color),
+        metalness: 0.1,
+        roughness: 0.4
+      });
+      
+      const cube = new THREE.Mesh(geometry, material);
+      cube.position.set(currentData.position.x, currentData.position.y, currentData.position.z);
+      cube.rotation.set(currentData.rotation.x, currentData.rotation.y, currentData.rotation.z);
+      scene.add(cube);
+      
+      console.log('Rendering scene for screenshot...');
+      
+      // Render and capture
+      renderer.render(scene, camera);
+      
+      // Convert to blob
+      screenshotCanvas.toBlob((blob) => {
+        if (blob) {
+          console.log('Screenshot blob created, size:', blob.size);
+          const reader = new FileReader();
+          reader.onload = () => {
+            console.log('Screenshot data URL created');
+            resolve(reader.result as string);
+          };
+          reader.onerror = (error) => {
+            console.error('FileReader error:', error);
+            reject(error);
+          };
+          reader.readAsDataURL(blob);
+        } else {
+          console.error('Failed to create screenshot blob');
+          reject(new Error('Failed to create screenshot blob'));
+        }
+      }, 'image/png', 0.9);
+      
+      // Cleanup
+      geometry.dispose();
+      material.dispose();
+      renderer.dispose();
+    });
+  };
+
+  const uploadScreenshot = async (dataUrl: string): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
+    
+    console.log('Starting screenshot upload...');
+    
+    // Convert data URL to blob
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    
+    console.log('Screenshot blob size for upload:', blob.size);
+    
+    // Generate filename
+    const fileName = `${user.id}/threejs-${Date.now()}.png`;
+    
+    console.log('Uploading to filename:', fileName);
+    
+    // Upload to Supabase storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('artwork-images')
+      .upload(fileName, blob, {
+        metadata: {
+          user_id: user.id,
+          type: 'threejs-screenshot'
+        }
+      });
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw uploadError;
+    }
+
+    console.log('Upload successful:', uploadData);
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('artwork-images')
+      .getPublicUrl(fileName);
+
+    console.log('Public URL generated:', publicUrl);
+    return publicUrl;
+  };
+
+  const handleTakeScreenshotAndUpdate = async () => {
+    if (!artworkId || !user) return;
+
+    setIsTakingScreenshot(true);
+    try {
+      console.log('Taking screenshot and updating artwork...');
+      console.log('Current scene data:', currentData);
+      
+      const screenshotDataUrl = await captureScreenshot();
+      console.log('Screenshot captured successfully');
+      
+      const imageUrl = await uploadScreenshot(screenshotDataUrl);
+      console.log('Screenshot uploaded, URL:', imageUrl);
+      
+      // Update the artwork with both the scene data and the new image URL
+      const updatedContent = {
+        ...currentData,
+        image_url: imageUrl
+      };
+      
+      console.log('Updating artwork with content:', updatedContent);
+      
+      const { error } = await supabase
+        .from('artwork')
+        .update({ content: updatedContent })
+        .eq('id', artworkId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Screenshot taken and artwork updated!",
+        description: "The 3D scene screenshot has been captured and saved"
+      });
+
+      // Invalidate and refetch artwork queries
+      queryClient.invalidateQueries({ queryKey: ['artwork'] });
+      queryClient.refetchQueries({ queryKey: ['artwork'] });
+
+      if (onSceneUpdate) {
+        onSceneUpdate(updatedContent);
+      }
+    } catch (error: any) {
+      console.error('Screenshot and update error:', error);
+      toast({
+        title: "Screenshot failed",
+        description: error.message || "Failed to capture screenshot and update artwork",
+        variant: "destructive"
+      });
+    } finally {
+      setIsTakingScreenshot(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!artworkId || !user) return;
 
     setIsSaving(true);
     try {
-      console.log('Saving scene data:', currentData);
+      console.log('Saving scene data only:', currentData);
       
       const { error } = await supabase
         .from('artwork')
@@ -263,6 +445,14 @@ const ThreeViewer2 = ({
                 size="sm"
               >
                 {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+              <Button 
+                onClick={handleTakeScreenshotAndUpdate} 
+                disabled={isTakingScreenshot || isSaving} 
+                variant="secondary"
+                size="sm"
+              >
+                {isTakingScreenshot ? "Taking Screenshot..." : "Take Screenshot & Update"}
               </Button>
               <Button 
                 onClick={handleCancel} 
