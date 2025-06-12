@@ -208,6 +208,7 @@ const ThreeViewer2 = ({
             <pointLight position={[-5, -5, 5]} intensity={0.8} />
             
             <UnifiedThreeCube 
+              key={`${isEditing}`} // Force re-render when editing state changes
               color={currentData.color}
               position={currentData.position}
               rotation={currentData.rotation}
