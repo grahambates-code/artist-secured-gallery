@@ -150,7 +150,7 @@ const ThreeViewer2 = ({
         description: "Your 3D scene changes have been saved"
       });
 
-      // Invalidate and refetch artwork queries
+      // Invalidate and refetch ALL artwork queries to ensure grid updates
       queryClient.invalidateQueries({ queryKey: ['artwork'] });
       queryClient.refetchQueries({ queryKey: ['artwork'] });
 
@@ -208,7 +208,6 @@ const ThreeViewer2 = ({
             <pointLight position={[-5, -5, 5]} intensity={0.8} />
             
             <UnifiedThreeCube 
-              key={`${isEditing}`} // Force re-render when editing state changes
               color={currentData.color}
               position={currentData.position}
               rotation={currentData.rotation}
