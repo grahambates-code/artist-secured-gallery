@@ -195,7 +195,7 @@ const ThreeViewer2 = ({
   const getSizeClasses = () => {
     switch (size) {
       case 'small':
-        return 'w-48 h-48';
+        return 'w-full h-full'; // Changed to fill container for grid cards
       case 'large':
         return 'w-96 h-96';
       default:

@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Trash2, Calendar, User, Image } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 
 interface ImageCardProps {
   artwork: {
@@ -35,7 +35,7 @@ const ImageCard = ({ artwork, canDelete, onClick, onDelete }: ImageCardProps) =>
       onClick={onClick}
     >
       {/* Force square aspect ratio with fixed container */}
-      <div className="w-full aspect-square">
+      <div className="w-full aspect-square relative">
         <div className="relative overflow-hidden bg-card border border-border transition-all duration-300 hover:border-foreground w-full h-full">
           <div className="relative overflow-hidden w-full h-full">
             <img 
@@ -46,7 +46,7 @@ const ImageCard = ({ artwork, canDelete, onClick, onDelete }: ImageCardProps) =>
             
             {/* Delete button - only show for artwork owner */}
             {canDelete && (
-              <div className="absolute top-3 right-3 z-10">
+              <div className="absolute top-3 right-3 z-20">
                 <Button
                   size="sm"
                   variant="destructive"
@@ -58,45 +58,22 @@ const ImageCard = ({ artwork, canDelete, onClick, onDelete }: ImageCardProps) =>
               </div>
             )}
 
+            {/* Metadata overlay */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <h3 className="text-white font-light text-lg mb-1 truncate">{artwork.title}</h3>
+              <div className="flex items-center justify-between text-white/80 text-sm">
+                <span>{artwork.year || 'Year not specified'}</span>
+                <span className="text-xs bg-white/20 px-2 py-1 rounded backdrop-blur-sm">
+                  Image
+                </span>
+              </div>
+            </div>
+
             {/* Minimal corner indicator */}
             <div className="absolute top-6 right-6 w-0 h-0 border-l border-b border-foreground/0 group-hover:border-foreground/60 group-hover:w-3 group-hover:h-3 transition-all duration-200 ease-out delay-200 pointer-events-none"></div>
           </div>
         </div>
       </div>
-
-      <CardContent className="p-4">
-        <h3 className="font-light text-lg mb-2 text-foreground tracking-wide">{artwork.title}</h3>
-        
-        {artwork.description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 font-light">
-            {artwork.description}
-          </p>
-        )}
-        
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <span className="font-light text-foreground">
-              {artwork.profiles?.artist_name || artwork.profiles?.email?.split('@')[0] || 'Unknown Artist'}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Image className="h-4 w-4 text-muted-foreground" />
-            <span className="font-mono text-xs bg-muted px-2 py-1 rounded text-muted-foreground font-light">
-              {artwork.medium || 'Digital Image'}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="text-foreground font-light">
-              {artwork.year || 'Year not specified'} • 
-              {new Date(artwork.created_at).toLocaleDateString()}
-            </span>
-          </div>
-        </div>
-      </CardContent>
     </Card>
   );
 };

@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, Calendar, User, Box } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import ThreeViewer2 from './ThreeViewer2';
 
 interface Artwork {
@@ -36,63 +35,45 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
       className="gallery-card group hover:bg-accent/50 transition-colors relative cursor-pointer"
       onClick={onClick}
     >
-      {/* Three.js Viewer */}
-      <div className="relative">
-        <ThreeViewer2
-          sceneData={artwork.content}
-          size="small"
-          showControls={false}
-          canEdit={false}
-          className="pointer-events-none"
-        />
-        
-        {canDelete && (
-          <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={onDelete}
-              className="h-8 w-8 p-0 font-light"
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </div>
-        )}
-      </div>
+      {/* Force square aspect ratio to match image cards */}
+      <div className="w-full aspect-square relative">
+        <div className="relative overflow-hidden bg-card border border-border transition-all duration-300 hover:border-foreground w-full h-full">
+          <ThreeViewer2
+            sceneData={artwork.content}
+            size="small"
+            showControls={false}
+            canEdit={false}
+            className="pointer-events-none w-full h-full"
+          />
+          
+          {canDelete && (
+            <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={onDelete}
+                className="h-8 w-8 p-0 bg-destructive/90 hover:bg-destructive backdrop-blur-sm"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
 
-      <CardContent className="p-4">
-        <h3 className="font-light text-lg mb-2 text-foreground tracking-wide">{artwork.title}</h3>
-        
-        {artwork.description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 font-light">
-            {artwork.description}
-          </p>
-        )}
-        
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <span className="font-light text-foreground">
-              {artwork.profiles?.artist_name || artwork.profiles?.email?.split('@')[0] || 'Unknown Artist'}
-            </span>
+          {/* Metadata overlay */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <h3 className="text-white font-light text-lg mb-1 truncate">{artwork.title}</h3>
+            <div className="flex items-center justify-between text-white/80 text-sm">
+              <span>{artwork.year || 'Year not specified'}</span>
+              <span className="text-xs bg-white/20 px-2 py-1 rounded backdrop-blur-sm">
+                3D Scene
+              </span>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Box className="h-4 w-4 text-muted-foreground" />
-            <span className="font-mono text-xs bg-muted px-2 py-1 rounded text-muted-foreground font-light">
-              3D Cube Scene
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="text-foreground font-light">
-              {artwork.year || 'Year not specified'} • 
-              {new Date(artwork.created_at).toLocaleDateString()}
-            </span>
-          </div>
+
+          {/* Minimal corner indicator */}
+          <div className="absolute top-6 right-6 w-0 h-0 border-l border-b border-foreground/0 group-hover:border-foreground/60 group-hover:w-3 group-hover:h-3 transition-all duration-200 ease-out delay-200 pointer-events-none"></div>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 };
