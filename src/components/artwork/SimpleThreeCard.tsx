@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,8 +52,8 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
       try {
         console.log('Calling captureThreeScene directly...');
         
-        // Call captureThreeScene directly without wrapping in another render queue task
-        const screenshot = await captureThreeScene(artwork.content, 400, 400);
+        // Use smaller dimensions for card display - 256x256 should be sufficient
+        const screenshot = await captureThreeScene(artwork.content, 256, 256);
         
         console.log('Capture result:', screenshot ? 'success' : 'failed');
         
@@ -102,7 +103,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
         <img 
           src={screenshotUrl} 
           alt={artwork.title}
-          className="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-[1.02] group-hover:contrast-110"
+          className="w-full h-full object-cover object-center transition-all duration-500 ease-out group-hover:scale-[1.02] group-hover:contrast-110"
         />
       );
     }
@@ -121,7 +122,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
     >
       {/* Force square aspect ratio to match image cards */}
       <div className="w-full aspect-square relative">
-        <div className="relative overflow-hidden bg-card border border-border transition-all duration-300 hover:border-foreground w-full h-full">
+        <div className="relative overflow-hidden bg-card border border-border transition-all duration-300 hover:border-foreground w-full h-full rounded-lg">
           {renderPreview()}
           
           {canDelete && (
