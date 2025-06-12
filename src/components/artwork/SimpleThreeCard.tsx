@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
-import ThreeViewer2 from './ThreeViewer2';
+import { Trash2, Image } from 'lucide-react';
+import { captureThreeScene } from '@/utils/threeCapture';
+import { renderQueue } from '@/utils/renderQueue';
 
 interface Artwork {
   id: string;
@@ -30,6 +31,80 @@ interface SimpleThreeCardProps {
 }
 
 const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeCardProps) => {
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [captureError, setCaptureError] = useState(false);
+
+  useEffect(() => {
+    const captureScreenshot = async () => {
+      if (!artwork.content || screenshotUrl || isCapturing) return;
+      
+      setIsCapturing(true);
+      setCaptureError(false);
+      
+      try {
+        console.log('Capturing screenshot for artwork:', artwork.id);
+        
+        const screenshot = await renderQueue.add(() => 
+          captureThreeScene(artwork.content, { width: 400, height: 400 })
+        );
+        
+        if (screenshot) {
+          setScreenshotUrl(screenshot);
+          console.log('Screenshot captured successfully for:', artwork.id);
+        } else {
+          throw new Error('Failed to capture screenshot');
+        }
+      } catch (error) {
+        console.error('Error capturing screenshot:', error);
+        setCaptureError(true);
+      } finally {
+        setIsCapturing(false);
+      }
+    };
+
+    // Small delay to avoid overwhelming the system
+    const timer = setTimeout(captureScreenshot, Math.random() * 1000);
+    return () => clearTimeout(timer);
+  }, [artwork.content, artwork.id, screenshotUrl, isCapturing]);
+
+  const renderPreview = () => {
+    if (isCapturing) {
+      return (
+        <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+          <div className="text-white/60 text-sm animate-pulse">Capturing...</div>
+        </div>
+      );
+    }
+
+    if (captureError) {
+      return (
+        <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+          <div className="text-white/60 text-sm flex items-center gap-2">
+            <Image className="w-4 h-4" />
+            3D Scene
+          </div>
+        </div>
+      );
+    }
+
+    if (screenshotUrl) {
+      return (
+        <img 
+          src={screenshotUrl} 
+          alt={artwork.title}
+          className="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-[1.02] group-hover:contrast-110"
+        />
+      );
+    }
+
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-white/60 text-sm">Loading...</div>
+      </div>
+    );
+  };
+
   return (
     <Card 
       className="gallery-card group hover:bg-accent/50 transition-colors relative cursor-pointer"
@@ -38,13 +113,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
       {/* Force square aspect ratio to match image cards */}
       <div className="w-full aspect-square relative">
         <div className="relative overflow-hidden bg-card border border-border transition-all duration-300 hover:border-foreground w-full h-full">
-          <ThreeViewer2
-            sceneData={artwork.content}
-            size="small"
-            showControls={false}
-            canEdit={false}
-            className="pointer-events-none w-full h-full"
-          />
+          {renderPreview()}
           
           {canDelete && (
             <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
