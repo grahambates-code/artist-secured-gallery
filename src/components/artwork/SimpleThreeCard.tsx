@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -8,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Trash2, Calendar, User, Box, Loader } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { getCachedThreeCapture } from '@/utils/threeCapture';
-import ThreeCube from './ThreeCube';
+import UnifiedThreeCube from './UnifiedThreeCube';
 
 interface Artwork {
   id: string;
@@ -56,23 +55,6 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
     ...defaultData,
     ...artwork.content
   };
-
-  // Debug log the camera position and cube position
-  useEffect(() => {
-    const distance = Math.sqrt(
-      Math.pow(threeData.cameraPosition.x - threeData.position.x, 2) +
-      Math.pow(threeData.cameraPosition.y - threeData.position.y, 2) +
-      Math.pow(threeData.cameraPosition.z - threeData.position.z, 2)
-    );
-    
-    if (distance > 50) {
-      console.warn('Camera very far from cube in grid view:', {
-        cameraPosition: threeData.cameraPosition,
-        cubePosition: threeData.position,
-        distance: distance
-      });
-    }
-  }, [threeData.cameraPosition, threeData.position]);
 
   useEffect(() => {
     const captureScene = async () => {
@@ -163,28 +145,17 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
               }}
               className="w-full h-full"
               onClick={handle3DClick}
-              onCreated={({ camera, gl }) => {
-                // Ensure camera is properly positioned
-                camera.position.set(
-                  threeData.cameraPosition.x, 
-                  threeData.cameraPosition.y, 
-                  threeData.cameraPosition.z
-                );
-                camera.updateProjectionMatrix();
-                
-                // Look at the cube
-                camera.lookAt(threeData.position.x, threeData.position.y, threeData.position.z);
-              }}
             >
               <ambientLight intensity={0.6} />
               <pointLight position={[5, 5, 5]} intensity={1.2} />
               <pointLight position={[-5, -5, 5]} intensity={0.8} />
               
-              <ThreeCube 
+              <UnifiedThreeCube 
                 color={threeData.color}
                 position={threeData.position}
                 rotation={threeData.rotation}
                 scale={threeData.scale}
+                cameraPosition={threeData.cameraPosition}
                 isEditable={false}
               />
               

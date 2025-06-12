@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import ThreeCube from './ThreeCube';
+import UnifiedThreeCube from './UnifiedThreeCube';
 
 interface ThreeViewerProps {
   sceneData: {
@@ -153,11 +153,12 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
             <pointLight position={[5, 5, 5]} intensity={1.2} />
             <pointLight position={[-5, -5, 5]} intensity={0.8} />
             
-            <ThreeCube 
+            <UnifiedThreeCube 
               color={currentData.color}
               position={currentData.position}
               rotation={currentData.rotation}
               scale={currentData.scale}
+              cameraPosition={currentData.cameraPosition}
               isEditable={isEditing}
               onPositionChange={handlePositionChange}
               onRotationChange={handleRotationChange}
