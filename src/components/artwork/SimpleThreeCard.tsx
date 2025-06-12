@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -43,11 +44,16 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
   const doubleTapDelayRef = useRef<NodeJS.Timeout | null>(null);
   
   // Ensure all required properties are present with proper defaults
-  const threeData = {
-    color: '#00ff00',
+  const defaultData = {
     position: { x: 0, y: 0, z: 0 },
     rotation: { x: 0, y: 0, z: 0 },
     scale: { x: 1, y: 1, z: 1 },
+    color: '#00ff00',
+    cameraPosition: { x: 0, y: 0, z: 5 }
+  };
+
+  const threeData = {
+    ...defaultData,
     ...artwork.content
   };
 
@@ -69,7 +75,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
     if (!is3DMode) {
       captureScene();
     }
-  }, [threeData.color, threeData.position.x, threeData.position.y, threeData.position.z, threeData.rotation.x, threeData.rotation.y, threeData.rotation.z, threeData.scale.x, threeData.scale.y, threeData.scale.z, is3DMode]);
+  }, [threeData.color, threeData.position.x, threeData.position.y, threeData.position.z, threeData.rotation.x, threeData.rotation.y, threeData.rotation.z, threeData.scale.x, threeData.scale.y, threeData.scale.z, threeData.cameraPosition.x, threeData.cameraPosition.y, threeData.cameraPosition.z, is3DMode]);
 
   const handleClick = (e: React.MouseEvent) => {
     const currentTime = new Date().getTime();
@@ -131,7 +137,11 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
         <AspectRatio ratio={1} className="bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
           {is3DMode ? (
             <Canvas 
-              camera={{ position: [0, 0, 5], fov: 75 }}
+              camera={{ 
+                position: [threeData.cameraPosition.x, threeData.cameraPosition.y, threeData.cameraPosition.z], 
+                fov: 75,
+                aspect: 1
+              }}
               className="w-full h-full"
               onClick={handle3DClick}
             >
@@ -225,6 +235,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
               <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-mono">
                 <div>Pos: {threeData.position.x.toFixed(1)}, {threeData.position.y.toFixed(1)}, {threeData.position.z.toFixed(1)}</div>
                 <div>Scale: {threeData.scale.x.toFixed(1)}, {threeData.scale.y.toFixed(1)}, {threeData.scale.z.toFixed(1)}</div>
+                <div>Cam: {threeData.cameraPosition.x.toFixed(1)}, {threeData.cameraPosition.y.toFixed(1)}, {threeData.cameraPosition.z.toFixed(1)}</div>
               </div>
             </div>
           )}
@@ -260,6 +271,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
             <div>Position: ({threeData.position.x.toFixed(2)}, {threeData.position.y.toFixed(2)}, {threeData.position.z.toFixed(2)})</div>
             <div>Rotation: ({threeData.rotation.x.toFixed(2)}, {threeData.rotation.y.toFixed(2)}, {threeData.rotation.z.toFixed(2)})</div>
             <div>Scale: ({threeData.scale.x.toFixed(2)}, {threeData.scale.y.toFixed(2)}, {threeData.scale.z.toFixed(2)})</div>
+            <div>Camera: ({threeData.cameraPosition.x.toFixed(2)}, {threeData.cameraPosition.y.toFixed(2)}, {threeData.cameraPosition.z.toFixed(2)})</div>
             <div>Color: {threeData.color}</div>
             {is3DMode && <div className="text-blue-400">Mode: Interactive 3D - Use mouse to explore!</div>}
           </div>

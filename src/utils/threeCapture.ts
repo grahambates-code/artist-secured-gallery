@@ -1,3 +1,4 @@
+
 import * as THREE from 'three';
 import { renderQueue } from './renderQueue';
 
@@ -6,6 +7,7 @@ interface ThreeData {
   position: { x: number; y: number; z: number };
   rotation: { x: number; y: number; z: number };
   scale: { x: number; y: number; z: number };
+  cameraPosition?: { x: number; y: number; z: number };
 }
 
 export const captureThreeScene = async (
@@ -34,9 +36,10 @@ export const captureThreeScene = async (
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x1e293b); // slate-800
       
-      // Create camera
+      // Create camera with saved position or default
       const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-      camera.position.set(0, 0, 5);
+      const cameraPos = threeData.cameraPosition || { x: 0, y: 0, z: 5 };
+      camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
       
       // Use the exact same lighting setup as the interactive mode
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -63,13 +66,9 @@ export const captureThreeScene = async (
       
       const cube = new THREE.Mesh(geometry, material);
       
-      // Apply transformations
+      // Apply transformations exactly as stored in database
       cube.position.set(threeData.position.x, threeData.position.y, threeData.position.z);
-      cube.rotation.set(
-        threeData.rotation.x + 0.3, 
-        threeData.rotation.y + 0.3, 
-        threeData.rotation.z
-      );
+      cube.rotation.set(threeData.rotation.x, threeData.rotation.y, threeData.rotation.z);
       cube.scale.set(threeData.scale.x, threeData.scale.y, threeData.scale.z);
       
       scene.add(cube);
@@ -96,12 +95,13 @@ export const captureThreeScene = async (
 const captureCache = new Map<string, string>();
 
 export const getCachedThreeCapture = async (threeData: ThreeData): Promise<string> => {
-  // Create cache key from scene data
+  // Create cache key from scene data including camera position
   const cacheKey = JSON.stringify({
     color: threeData.color,
     position: threeData.position,
     rotation: threeData.rotation,
-    scale: threeData.scale
+    scale: threeData.scale,
+    cameraPosition: threeData.cameraPosition
   });
   
   if (captureCache.has(cacheKey)) {
