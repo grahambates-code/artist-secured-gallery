@@ -30,7 +30,21 @@ const ThreeCube = ({
   const dragOffset = useRef<THREE.Vector3>(new THREE.Vector3());
   const lastMousePos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   
-  const { gl } = useThree();
+  const { gl, camera } = useThree();
+
+  // Debug logging for extreme positions
+  useEffect(() => {
+    if (meshRef.current && camera) {
+      const distance = camera.position.distanceTo(meshRef.current.position);
+      if (distance > 50) {
+        console.warn('Camera very far from cube:', {
+          cameraPosition: camera.position,
+          cubePosition: meshRef.current.position,
+          distance: distance
+        });
+      }
+    }
+  }, [position, camera.position]);
 
   // Handle keyboard shortcuts for edit modes
   useEffect(() => {
@@ -113,9 +127,9 @@ const ThreeCube = ({
     if (editMode === 'move') {
       const newPosition = event.point.clone().sub(dragOffset.current);
       
-      newPosition.x = Math.max(-5, Math.min(5, newPosition.x));
-      newPosition.y = Math.max(-3, Math.min(3, newPosition.y));
-      newPosition.z = Math.max(-2, Math.min(2, newPosition.z));
+      newPosition.x = Math.max(-10, Math.min(10, newPosition.x));
+      newPosition.y = Math.max(-5, Math.min(5, newPosition.y));
+      newPosition.z = Math.max(-5, Math.min(5, newPosition.z));
       
       meshRef.current.position.copy(newPosition);
       
@@ -142,7 +156,7 @@ const ThreeCube = ({
     } else if (editMode === 'scale') {
       const scaleSpeed = 0.01;
       const scaleDelta = deltaY * scaleSpeed;
-      const newScale = Math.max(0.1, Math.min(3, meshRef.current.scale.x - scaleDelta));
+      const newScale = Math.max(0.1, Math.min(5, meshRef.current.scale.x - scaleDelta));
       
       meshRef.current.scale.set(newScale, newScale, newScale);
       
