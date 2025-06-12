@@ -6,7 +6,7 @@ interface ThreeData {
   color: string;
   position: { x: number; y: number; z: number };
   rotation: { x: number; y: number; z: number };
-  scale: { x: number; y: number; z: number };
+  scale?: { x: number; y: number; z: number };
   cameraPosition?: { x: number; y: number; z: number };
 }
 
@@ -20,16 +20,22 @@ export const captureThreeScene = async (
   return renderQueue.add(async () => {
     console.log('Inside render queue task, creating renderer...');
     
-    // Create off-screen renderer with better color preservation
+    // Create off-screen renderer with explicit canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    
     const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
       antialias: true,
       preserveDrawingBuffer: true,
       powerPreference: "high-performance",
       alpha: false
     });
     
-    console.log('Renderer created, setting size...');
-    renderer.setSize(width, height);
+    console.log('Renderer created, setting size and viewport...');
+    renderer.setSize(width, height, false); // false = don't update style
+    renderer.setViewport(0, 0, width, height);
     renderer.setPixelRatio(1);
     
     // Disable tone mapping to preserve original colors
@@ -81,21 +87,29 @@ export const captureThreeScene = async (
       // Apply transformations exactly as stored in database
       cube.position.set(threeData.position.x, threeData.position.y, threeData.position.z);
       cube.rotation.set(threeData.rotation.x, threeData.rotation.y, threeData.rotation.z);
-      cube.scale.set(threeData.scale.x, threeData.scale.y, threeData.scale.z);
+      
+      // Handle missing scale data with default values
+      const scaleData = threeData.scale || { x: 1, y: 1, z: 1 };
+      cube.scale.set(scaleData.x, scaleData.y, scaleData.z);
       
       scene.add(cube);
       
       console.log('Rendering scene...');
       
-      // Render scene once to ensure proper color output
+      // Clear and render the scene
+      renderer.clear();
       renderer.render(scene, camera);
       
-      console.log('Capturing data URL...');
+      console.log('Capturing data URL from canvas...');
       
-      // Capture as data URL with maximum quality
-      const dataURL = renderer.domElement.toDataURL('image/png', 1.0);
+      // Force a read from the framebuffer to ensure rendering is complete
+      const gl = renderer.getContext();
+      gl.finish();
       
-      console.log('Data URL captured, length:', dataURL.length);
+      // Capture as data URL with maximum quality, specifying exact canvas dimensions
+      const dataURL = canvas.toDataURL('image/png', 1.0);
+      
+      console.log('Data URL captured, length:', dataURL.length, 'canvas size:', canvas.width, 'x', canvas.height);
       
       // Clean up
       geometry.dispose();
