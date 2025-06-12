@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Button } from '@/components/ui/button';
@@ -51,7 +51,8 @@ const ThreeViewer2 = ({
     cameraTarget: { x: 0, y: 0, z: 0 }
   };
   
-  const initializeData = () => {
+  // Initialize data ONCE and don't change it when edit mode changes
+  const [initializedData] = useState(() => {
     if (!sceneData || typeof sceneData !== 'object' || sceneData === null || Array.isArray(sceneData)) {
       return defaultData;
     }
@@ -64,11 +65,26 @@ const ThreeViewer2 = ({
       cameraPosition: sceneData.cameraPosition || defaultData.cameraPosition,
       cameraTarget: sceneData.cameraTarget || defaultData.cameraTarget
     };
-  };
+  });
     
-  const [currentData, setCurrentData] = useState(initializeData());
+  const [currentData, setCurrentData] = useState(initializedData);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Update currentData when sceneData changes (but not when edit mode changes)
+  useEffect(() => {
+    if (sceneData && typeof sceneData === 'object' && !Array.isArray(sceneData)) {
+      const newData = {
+        position: sceneData.position || defaultData.position,
+        rotation: sceneData.rotation || defaultData.rotation,
+        scale: sceneData.scale || defaultData.scale,
+        color: sceneData.color || defaultData.color,
+        cameraPosition: sceneData.cameraPosition || defaultData.cameraPosition,
+        cameraTarget: sceneData.cameraTarget || defaultData.cameraTarget
+      };
+      setCurrentData(newData);
+    }
+  }, [sceneData]);
 
   const handlePositionChange = (newPosition: { x: number; y: number; z: number }) => {
     if (!isEditing) return;
@@ -171,7 +187,8 @@ const ThreeViewer2 = ({
   };
 
   const handleCancel = () => {
-    setCurrentData(initializeData());
+    // Reset to the original initialized data, not re-initialize
+    setCurrentData(initializedData);
     setIsEditing(false);
   };
 
