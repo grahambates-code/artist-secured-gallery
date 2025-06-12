@@ -37,28 +37,41 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
 
   useEffect(() => {
     const captureScreenshot = async () => {
-      if (!artwork.content || screenshotUrl || isCapturing) return;
+      if (!artwork.content || screenshotUrl || isCapturing) {
+        console.log('Skipping capture:', {
+          hasContent: !!artwork.content,
+          hasScreenshot: !!screenshotUrl,
+          isCapturing
+        });
+        return;
+      }
       
+      console.log('Starting capture for artwork:', artwork.id, artwork.content);
       setIsCapturing(true);
       setCaptureError(false);
       
       try {
-        console.log('Capturing screenshot for artwork:', artwork.id);
+        console.log('Adding capture task to render queue...');
         
-        const screenshot = await renderQueue.add(() => 
-          captureThreeScene(artwork.content, 400, 400)
-        );
+        const screenshot = await renderQueue.add(() => {
+          console.log('Executing capture task...');
+          return captureThreeScene(artwork.content, 400, 400);
+        });
+        
+        console.log('Capture result:', screenshot ? 'success' : 'failed');
         
         if (screenshot) {
           setScreenshotUrl(screenshot);
           console.log('Screenshot captured successfully for:', artwork.id);
         } else {
-          throw new Error('Failed to capture screenshot');
+          console.error('Screenshot capture returned null/undefined');
+          throw new Error('Failed to capture screenshot - no data returned');
         }
       } catch (error) {
-        console.error('Error capturing screenshot:', error);
+        console.error('Error capturing screenshot for artwork', artwork.id, ':', error);
         setCaptureError(true);
       } finally {
+        console.log('Capture process completed for:', artwork.id);
         setIsCapturing(false);
       }
     };

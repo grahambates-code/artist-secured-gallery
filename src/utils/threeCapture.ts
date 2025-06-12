@@ -15,7 +15,11 @@ export const captureThreeScene = async (
   width: number = 512,
   height: number = 512
 ): Promise<string> => {
+  console.log('captureThreeScene called with:', { threeData, width, height });
+  
   return renderQueue.add(async () => {
+    console.log('Inside render queue task, creating renderer...');
+    
     // Create off-screen renderer with better color preservation
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -23,6 +27,8 @@ export const captureThreeScene = async (
       powerPreference: "high-performance",
       alpha: false
     });
+    
+    console.log('Renderer created, setting size...');
     renderer.setSize(width, height);
     renderer.setPixelRatio(1);
     
@@ -32,6 +38,8 @@ export const captureThreeScene = async (
     renderer.toneMappingExposure = 1.0;
     
     try {
+      console.log('Creating scene and camera...');
+      
       // Create scene
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x1e293b); // slate-800
@@ -40,6 +48,8 @@ export const captureThreeScene = async (
       const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
       const cameraPos = threeData.cameraPosition || { x: 0, y: 0, z: 5 };
       camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
+      
+      console.log('Adding lights...');
       
       // Use the exact same lighting setup as the interactive mode
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -52,6 +62,8 @@ export const captureThreeScene = async (
       const pointLight2 = new THREE.PointLight(0xffffff, 0.8, 0);
       pointLight2.position.set(-5, -5, 5);
       scene.add(pointLight2);
+      
+      console.log('Creating cube with data:', threeData);
       
       // Create cube with exact same material properties as interactive mode
       const geometry = new THREE.BoxGeometry(2, 2, 2);
@@ -73,19 +85,30 @@ export const captureThreeScene = async (
       
       scene.add(cube);
       
+      console.log('Rendering scene...');
+      
       // Render scene once to ensure proper color output
       renderer.render(scene, camera);
       
+      console.log('Capturing data URL...');
+      
       // Capture as data URL with maximum quality
       const dataURL = renderer.domElement.toDataURL('image/png', 1.0);
+      
+      console.log('Data URL captured, length:', dataURL.length);
       
       // Clean up
       geometry.dispose();
       material.dispose();
       
+      console.log('Cleanup completed, returning data URL');
       return dataURL;
+    } catch (error) {
+      console.error('Error in captureThreeScene:', error);
+      throw error;
     } finally {
       // Always dispose renderer
+      console.log('Disposing renderer...');
       renderer.dispose();
     }
   });
@@ -105,10 +128,12 @@ export const getCachedThreeCapture = async (threeData: ThreeData): Promise<strin
   });
   
   if (captureCache.has(cacheKey)) {
+    console.log('Using cached capture for key:', cacheKey);
     return captureCache.get(cacheKey)!;
   }
   
   try {
+    console.log('Capturing new scene for cache key:', cacheKey);
     const dataURL = await captureThreeScene(threeData);
     captureCache.set(cacheKey, dataURL);
     return dataURL;
