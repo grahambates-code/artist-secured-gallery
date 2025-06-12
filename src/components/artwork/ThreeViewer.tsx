@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ interface ThreeViewerProps {
     rotation?: { x: number; y: number; z: number };
     scale?: { x: number; y: number; z: number };
     color?: string;
+    cameraPosition?: { x: number; y: number; z: number };
   };
   artworkId?: string;
   canEdit?: boolean;
@@ -26,12 +27,15 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const cameraRef = useRef<any>();
+  const controlsRef = useRef<any>();
   
   const defaultData = {
     position: { x: 0, y: 0, z: 0 },
     rotation: { x: 0, y: 0, z: 0 },
     scale: { x: 1, y: 1, z: 1 },
-    color: '#00ff00'
+    color: '#00ff00',
+    cameraPosition: { x: 0, y: 0, z: 5 }
   };
   
   const initializeData = () => {
@@ -43,7 +47,8 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
       position: sceneData.position || defaultData.position,
       rotation: sceneData.rotation || defaultData.rotation,
       scale: sceneData.scale || defaultData.scale,
-      color: sceneData.color || defaultData.color
+      color: sceneData.color || defaultData.color,
+      cameraPosition: sceneData.cameraPosition || defaultData.cameraPosition
     };
   };
     
@@ -57,6 +62,37 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
       position: newPosition
     };
     setCurrentData(updatedData);
+  };
+
+  const handleRotationChange = (newRotation: { x: number; y: number; z: number }) => {
+    const updatedData = {
+      ...currentData,
+      rotation: newRotation
+    };
+    setCurrentData(updatedData);
+  };
+
+  const handleScaleChange = (newScale: { x: number; y: number; z: number }) => {
+    const updatedData = {
+      ...currentData,
+      scale: newScale
+    };
+    setCurrentData(updatedData);
+  };
+
+  const handleCameraChange = () => {
+    if (cameraRef.current && isEditing) {
+      const camera = cameraRef.current;
+      const updatedData = {
+        ...currentData,
+        cameraPosition: {
+          x: parseFloat(camera.position.x.toFixed(2)),
+          y: parseFloat(camera.position.y.toFixed(2)),
+          z: parseFloat(camera.position.z.toFixed(2))
+        }
+      };
+      setCurrentData(updatedData);
+    }
   };
 
   const handleSave = async () => {
@@ -103,7 +139,16 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
     <div className="space-y-4">
       <div className="w-64 h-64 mx-auto">
         <AspectRatio ratio={1} className="border border-border rounded-lg overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 relative w-full h-full">
-          <Canvas camera={{ position: [0, 0, 5], fov: 75, aspect: 1 }}>
+          <Canvas 
+            camera={{ 
+              position: [currentData.cameraPosition.x, currentData.cameraPosition.y, currentData.cameraPosition.z], 
+              fov: 75, 
+              aspect: 1 
+            }}
+            onCreated={({ camera }) => {
+              cameraRef.current = camera;
+            }}
+          >
             <ambientLight intensity={0.6} />
             <pointLight position={[5, 5, 5]} intensity={1.2} />
             <pointLight position={[-5, -5, 5]} intensity={0.8} />
@@ -115,13 +160,17 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
               scale={currentData.scale}
               isEditable={isEditing}
               onPositionChange={handlePositionChange}
+              onRotationChange={handleRotationChange}
+              onScaleChange={handleScaleChange}
             />
             
             <OrbitControls 
-              enabled={!isEditing}
-              enablePan={!isEditing} 
-              enableRotate={!isEditing}
-              enableZoom={!isEditing}
+              ref={controlsRef}
+              enabled={true}
+              enablePan={true} 
+              enableRotate={true}
+              enableZoom={true}
+              onChange={handleCameraChange}
             />
           </Canvas>
         </AspectRatio>
@@ -131,7 +180,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
         <div className="flex gap-2">
           {!isEditing ? (
             <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
-              Edit Position
+              Edit Scene
             </Button>
           ) : (
             <>
@@ -157,12 +206,13 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
       {isEditing && (
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            Click and drag the cube to reposition it. Use orbit controls to view from different angles.
+            Drag the cube to move it, use scroll wheel to zoom, hold right-click to rotate view. Use keyboard shortcuts: R (rotate), S (scale), G (grab/move).
           </p>
           <div className="text-xs text-muted-foreground font-mono bg-muted p-2 rounded">
             Position: x: {currentData.position.x.toFixed(2)}, y: {currentData.position.y.toFixed(2)}, z: {currentData.position.z.toFixed(2)}<br/>
             Rotation: x: {currentData.rotation.x.toFixed(2)}, y: {currentData.rotation.y.toFixed(2)}, z: {currentData.rotation.z.toFixed(2)}<br/>
             Scale: x: {(currentData.scale?.x || 1).toFixed(2)}, y: {(currentData.scale?.y || 1).toFixed(2)}, z: {(currentData.scale?.z || 1).toFixed(2)}<br/>
+            Camera: x: {currentData.cameraPosition.x.toFixed(2)}, y: {currentData.cameraPosition.y.toFixed(2)}, z: {currentData.cameraPosition.z.toFixed(2)}<br/>
             Color: {currentData.color}
           </div>
         </div>
