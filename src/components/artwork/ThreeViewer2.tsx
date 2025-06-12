@@ -52,6 +52,7 @@ const ThreeViewer2 = ({
   };
   
   // Initialize data ONCE and don't change it when edit mode changes
+  
   const [initializedData] = useState(() => {
     if (!sceneData || typeof sceneData !== 'object' || sceneData === null || Array.isArray(sceneData)) {
       return defaultData;
@@ -73,6 +74,7 @@ const ThreeViewer2 = ({
   const [isTakingScreenshot, setIsTakingScreenshot] = useState(false);
 
   // Update currentData when sceneData changes (but not when edit mode changes)
+
   useEffect(() => {
     if (sceneData && typeof sceneData === 'object' && !Array.isArray(sceneData)) {
       const newData = {
@@ -148,152 +150,91 @@ const ThreeViewer2 = ({
     }
   };
 
-  const captureScreenshot = async (): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      console.log('Starting screenshot capture...');
-      
-      // Create an off-screen canvas for screenshot
-      const screenshotCanvas = document.createElement('canvas');
-      screenshotCanvas.width = 512;
-      screenshotCanvas.height = 512;
-      
-      const renderer = new THREE.WebGLRenderer({
-        canvas: screenshotCanvas,
-        antialias: true,
-        preserveDrawingBuffer: true,
-        alpha: false
+  const handleTakeScreenshotAndUpdate = async () => {
+    console.log('Screenshot button clicked!');
+    console.log('artworkId:', artworkId);
+    console.log('user:', user);
+    
+    if (!artworkId || !user) {
+      console.log('Missing artworkId or user - returning early');
+      toast({
+        title: "Cannot take screenshot",
+        description: "Missing artwork ID or user authentication",
+        variant: "destructive"
       });
-      
-      renderer.setSize(512, 512);
-      renderer.setPixelRatio(1);
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.setClearColor(0x1e293b, 1);
-      
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x1e293b);
-      
-      // Create camera
-      const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-      camera.position.set(currentData.cameraPosition.x, currentData.cameraPosition.y, currentData.cameraPosition.z);
-      camera.lookAt(currentData.cameraTarget.x, currentData.cameraTarget.y, currentData.cameraTarget.z);
-      
-      // Add lighting
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-      scene.add(ambientLight);
-      
-      const pointLight = new THREE.PointLight(0xffffff, 1.2, 0);
-      pointLight.position.set(5, 5, 5);
-      scene.add(pointLight);
-      
-      const pointLight2 = new THREE.PointLight(0xffffff, 0.8, 0);
-      pointLight2.position.set(-5, -5, 5);
-      scene.add(pointLight2);
-      
-      // Create cube
-      const geometry = new THREE.BoxGeometry(2, 2, 2);
-      const material = new THREE.MeshStandardMaterial({ 
-        color: new THREE.Color(currentData.color),
-        metalness: 0.1,
-        roughness: 0.4
-      });
-      
-      const cube = new THREE.Mesh(geometry, material);
-      cube.position.set(currentData.position.x, currentData.position.y, currentData.position.z);
-      cube.rotation.set(currentData.rotation.x, currentData.rotation.y, currentData.rotation.z);
-      scene.add(cube);
-      
-      console.log('Rendering scene for screenshot...');
-      
-      // Render and capture
-      renderer.render(scene, camera);
-      
-      // Convert to blob
-      screenshotCanvas.toBlob((blob) => {
-        if (blob) {
-          console.log('Screenshot blob created, size:', blob.size);
-          const reader = new FileReader();
-          reader.onload = () => {
-            console.log('Screenshot data URL created');
-            resolve(reader.result as string);
-          };
-          reader.onerror = (error) => {
-            console.error('FileReader error:', error);
-            reject(error);
-          };
-          reader.readAsDataURL(blob);
-        } else {
-          console.error('Failed to create screenshot blob');
-          reject(new Error('Failed to create screenshot blob'));
-        }
-      }, 'image/png', 0.9);
-      
-      // Cleanup
-      geometry.dispose();
-      material.dispose();
-      renderer.dispose();
-    });
-  };
-
-  const uploadScreenshot = async (dataUrl: string): Promise<string> => {
-    if (!user) throw new Error('User not authenticated');
-    
-    console.log('Starting screenshot upload...');
-    
-    // Convert data URL to blob
-    const response = await fetch(dataUrl);
-    const blob = await response.blob();
-    
-    console.log('Screenshot blob size for upload:', blob.size);
-    
-    // Generate filename
-    const fileName = `${user.id}/threejs-${Date.now()}.png`;
-    
-    console.log('Uploading to filename:', fileName);
-    
-    // Upload to Supabase storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('artwork-images')
-      .upload(fileName, blob, {
-        metadata: {
-          user_id: user.id,
-          type: 'threejs-screenshot'
-        }
-      });
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
-      throw uploadError;
+      return;
     }
 
-    console.log('Upload successful:', uploadData);
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('artwork-images')
-      .getPublicUrl(fileName);
-
-    console.log('Public URL generated:', publicUrl);
-    return publicUrl;
-  };
-
-  const handleTakeScreenshotAndUpdate = async () => {
-    if (!artworkId || !user) return;
-
     setIsTakingScreenshot(true);
+    console.log('Starting screenshot process...');
+    
     try {
-      console.log('Taking screenshot and updating artwork...');
       console.log('Current scene data:', currentData);
       
-      const screenshotDataUrl = await captureScreenshot();
-      console.log('Screenshot captured successfully');
+      // Create a simple test canvas first
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
       
-      const imageUrl = await uploadScreenshot(screenshotDataUrl);
-      console.log('Screenshot uploaded, URL:', imageUrl);
+      if (!ctx) {
+        throw new Error('Could not get canvas context');
+      }
+      
+      // Draw a simple test rectangle
+      ctx.fillStyle = currentData.color || '#00ff00';
+      ctx.fillRect(100, 100, 312, 312);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '20px Arial';
+      ctx.fillText('Test Screenshot', 180, 260);
+      
+      console.log('Test canvas created');
+      
+      // Convert to blob
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to create blob'));
+          }
+        }, 'image/png', 0.9);
+      });
+      
+      console.log('Blob created, size:', blob.size);
+      
+      // Generate filename
+      const fileName = `${user.id}/threejs-test-${Date.now()}.png`;
+      console.log('Uploading to filename:', fileName);
+      
+      // Upload to Supabase storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('artwork-images')
+        .upload(fileName, blob, {
+          metadata: {
+            user_id: user.id,
+            type: 'threejs-screenshot'
+          }
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('Upload successful:', uploadData);
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('artwork-images')
+        .getPublicUrl(fileName);
+
+      console.log('Public URL generated:', publicUrl);
       
       // Update the artwork with both the scene data and the new image URL
       const updatedContent = {
         ...currentData,
-        image_url: imageUrl
+        image_url: publicUrl
       };
       
       console.log('Updating artwork with content:', updatedContent);
@@ -303,7 +244,12 @@ const ThreeViewer2 = ({
         .update({ content: updatedContent })
         .eq('id', artworkId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database update error:', error);
+        throw error;
+      }
+
+      console.log('Database updated successfully');
 
       toast({
         title: "Screenshot taken and artwork updated!",
@@ -326,6 +272,7 @@ const ThreeViewer2 = ({
       });
     } finally {
       setIsTakingScreenshot(false);
+      console.log('Screenshot process completed');
     }
   };
 
