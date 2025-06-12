@@ -46,11 +46,14 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
   };
 
   const handleSceneUpdate = (newData: any) => {
+    console.log('Scene data updated:', newData);
     setSceneData(newData);
   };
 
   const captureScreenshot = async (): Promise<string> => {
     return new Promise((resolve, reject) => {
+      console.log('Starting screenshot capture...');
+      
       // Create an off-screen canvas for screenshot
       const screenshotCanvas = document.createElement('canvas');
       screenshotCanvas.width = 512;
@@ -59,12 +62,14 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
       const renderer = new THREE.WebGLRenderer({
         canvas: screenshotCanvas,
         antialias: true,
-        preserveDrawingBuffer: true
+        preserveDrawingBuffer: true,
+        alpha: false
       });
       
       renderer.setSize(512, 512);
       renderer.setPixelRatio(1);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.setClearColor(0x1e293b, 1);
       
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x1e293b);
@@ -72,6 +77,7 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
       // Create camera
       const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
       camera.position.set(sceneData.cameraPosition.x, sceneData.cameraPosition.y, sceneData.cameraPosition.z);
+      camera.lookAt(sceneData.cameraTarget.x, sceneData.cameraTarget.y, sceneData.cameraTarget.z);
       
       // Add lighting
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -98,20 +104,30 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
       cube.rotation.set(sceneData.rotation.x, sceneData.rotation.y, sceneData.rotation.z);
       scene.add(cube);
       
+      console.log('Rendering scene for screenshot...');
+      
       // Render and capture
       renderer.render(scene, camera);
       
       // Convert to blob
       screenshotCanvas.toBlob((blob) => {
         if (blob) {
+          console.log('Screenshot blob created, size:', blob.size);
           const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
+          reader.onload = () => {
+            console.log('Screenshot data URL created');
+            resolve(reader.result as string);
+          };
+          reader.onerror = (error) => {
+            console.error('FileReader error:', error);
+            reject(error);
+          };
           reader.readAsDataURL(blob);
         } else {
+          console.error('Failed to create screenshot blob');
           reject(new Error('Failed to create screenshot blob'));
         }
-      }, 'image/png');
+      }, 'image/png', 0.9);
       
       // Cleanup
       geometry.dispose();
@@ -123,12 +139,18 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
   const uploadScreenshot = async (dataUrl: string): Promise<string> => {
     if (!user) throw new Error('User not authenticated');
     
+    console.log('Starting screenshot upload...');
+    
     // Convert data URL to blob
     const response = await fetch(dataUrl);
     const blob = await response.blob();
     
+    console.log('Screenshot blob size for upload:', blob.size);
+    
     // Generate filename
     const fileName = `${user.id}/threejs-${Date.now()}.png`;
+    
+    console.log('Uploading to filename:', fileName);
     
     // Upload to Supabase storage
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -140,13 +162,19 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
         }
       });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw uploadError;
+    }
+
+    console.log('Upload successful:', uploadData);
 
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('artwork-images')
       .getPublicUrl(fileName);
 
+    console.log('Public URL generated:', publicUrl);
     return publicUrl;
   };
 
@@ -163,30 +191,43 @@ const ThreeArtworkForm = ({ onBack, onSuccess }: ThreeArtworkFormProps) => {
 
     setUploading(true);
     try {
-      console.log('Capturing screenshot...');
+      console.log('Starting artwork creation process...');
+      console.log('Current scene data:', sceneData);
+      
       const screenshotDataUrl = await captureScreenshot();
+      console.log('Screenshot captured successfully');
       
-      console.log('Uploading screenshot...');
       const imageUrl = await uploadScreenshot(screenshotDataUrl);
+      console.log('Screenshot uploaded, URL:', imageUrl);
       
-      console.log('Saving artwork to database...');
-      const { error } = await supabase
+      const artworkData = {
+        title: title.trim(),
+        description: description.trim() || null,
+        medium: medium.trim() || null,
+        year: year ? parseInt(year) : null,
+        user_id: user.id,
+        published: true,
+        type: 'threejs',
+        content: {
+          ...sceneData,
+          image_url: imageUrl
+        }
+      };
+      
+      console.log('Saving artwork to database:', artworkData);
+      
+      const { data: insertedArtwork, error } = await supabase
         .from('artwork')
-        .insert({
-          title: title.trim(),
-          description: description.trim() || null,
-          medium: medium.trim() || null,
-          year: year ? parseInt(year) : null,
-          user_id: user.id,
-          published: true,
-          type: 'threejs',
-          content: {
-            ...sceneData,
-            image_url: imageUrl
-          }
-        });
+        .insert(artworkData)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database insert error:', error);
+        throw error;
+      }
+
+      console.log('Artwork saved successfully:', insertedArtwork);
 
       toast({
         title: "3D Scene created successfully!",
