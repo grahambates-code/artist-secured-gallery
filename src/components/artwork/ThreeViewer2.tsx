@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import UnifiedThreeCube from './UnifiedThreeCube';
 
-interface ThreeViewerProps {
+interface ThreeViewer2Props {
   sceneData: {
     position?: { x: number; y: number; z: number };
     rotation?: { x: number; y: number; z: number };
@@ -22,9 +22,20 @@ interface ThreeViewerProps {
   artworkId?: string;
   canEdit?: boolean;
   onSceneUpdate?: (newData: any) => void;
+  size?: 'small' | 'medium' | 'large';
+  showControls?: boolean;
+  className?: string;
 }
 
-const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: ThreeViewerProps) => {
+const ThreeViewer2 = ({ 
+  sceneData, 
+  artworkId, 
+  canEdit = false, 
+  onSceneUpdate,
+  size = 'medium',
+  showControls = true,
+  className = ''
+}: ThreeViewer2Props) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -102,11 +113,6 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
         }
       };
       setCurrentData(updatedData);
-      
-      console.log('Camera state updated:', {
-        position: updatedData.cameraPosition,
-        target: updatedData.cameraTarget
-      });
     }
   };
 
@@ -152,9 +158,20 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
     setIsEditing(false);
   };
 
+  const getSizeClasses = () => {
+    switch (size) {
+      case 'small':
+        return 'w-48 h-48';
+      case 'large':
+        return 'w-96 h-96';
+      default:
+        return 'w-64 h-64';
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="w-64 h-64 mx-auto">
+    <div className={`space-y-4 ${className}`}>
+      <div className={`${getSizeClasses()} mx-auto`}>
         <AspectRatio ratio={1} className="border border-border rounded-lg overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 relative w-full h-full">
           <Canvas 
             camera={{ 
@@ -195,7 +212,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
         </AspectRatio>
       </div>
 
-      {canEdit && user && (
+      {canEdit && user && showControls && (
         <div className="flex gap-2">
           {!isEditing ? (
             <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
@@ -222,7 +239,7 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
         </div>
       )}
 
-      {isEditing && (
+      {isEditing && showControls && (
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
             Drag the cube to move it, use scroll wheel to zoom, hold right-click to rotate view. Use keyboard shortcuts: R (rotate), S (scale), G (grab/move).
@@ -241,4 +258,4 @@ const ThreeViewer = ({ sceneData, artworkId, canEdit = false, onSceneUpdate }: T
   );
 };
 
-export default ThreeViewer;
+export default ThreeViewer2;

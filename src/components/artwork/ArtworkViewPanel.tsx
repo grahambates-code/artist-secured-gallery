@@ -1,37 +1,28 @@
+
 import React from 'react';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
-} from '@/components/ui/alert-dialog';
-import { Mail, Calendar, Palette, Trash2, FileText, Box } from 'lucide-react';
+import { Calendar, User, Palette, Hash, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import ThreeViewer from './ThreeViewer';
+import ThreeViewer2 from './ThreeViewer2';
 
 interface Artwork {
   id: string;
   title: string;
-  description: string | null;
-  medium: string | null;
-  year: number | null;
+  description?: string;
+  medium?: string;
+  year?: number;
   created_at: string;
   user_id: string;
+  published?: boolean;
   type?: string;
   content?: any;
   profiles?: {
     email: string;
-    artist_name: string | null;
+    artist_name?: string;
   };
 }
 
@@ -43,7 +34,13 @@ interface ArtworkViewPanelProps {
   onArtworkUpdated?: () => void;
 }
 
-const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted, onArtworkUpdated }: ArtworkViewPanelProps) => {
+const ArtworkViewPanel = ({ 
+  open, 
+  onOpenChange, 
+  artwork, 
+  onArtworkDeleted,
+  onArtworkUpdated 
+}: ArtworkViewPanelProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -51,19 +48,9 @@ const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted, onArt
 
   const isOwner = user && user.id === artwork.user_id;
   const artworkType = artwork.type || 'image';
-  const imageUrl = artwork.content?.image_url;
-  const textContent = artwork.content?.text;
-  const threeData = artwork.content;
 
-  const handleDeleteArtwork = async () => {
-    if (!user || user.id !== artwork.user_id) {
-      toast({
-        title: "Permission denied",
-        description: "You can only delete your own artwork",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleDelete = async () => {
+    if (!isOwner || !artwork) return;
 
     try {
       const { error } = await supabase
@@ -78,10 +65,7 @@ const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted, onArt
         description: `"${artwork.title}" has been successfully deleted`,
       });
 
-      // Close the panel
       onOpenChange(false);
-
-      // Trigger refresh of artwork list
       if (onArtworkDeleted) {
         onArtworkDeleted();
       }
@@ -95,144 +79,111 @@ const ArtworkViewPanel = ({ open, onOpenChange, artwork, onArtworkDeleted, onArt
     }
   };
 
-  const handleSceneUpdate = (newData: any) => {
-    // Update the artwork object with new data
-    artwork.content = newData;
-    
-    // Trigger refresh of artwork list so the grid shows updated data
-    if (onArtworkUpdated) {
-      onArtworkUpdated();
+  const renderArtworkContent = () => {
+    if (artworkType === 'text') {
+      const textContent = artwork.content?.text || '';
+      return (
+        <div className="bg-card border border-border p-6 rounded-lg">
+          <div className="prose prose-sm max-w-none">
+            <div className="whitespace-pre-wrap text-foreground leading-relaxed">
+              {textContent || 'No text content'}
+            </div>
+          </div>
+        </div>
+      );
     }
+
+    if (artworkType === 'threejs') {
+      return (
+        <ThreeViewer2
+          sceneData={artwork.content}
+          artworkId={artwork.id}
+          canEdit={isOwner}
+          onSceneUpdate={onArtworkUpdated}
+          size="large"
+        />
+      );
+    }
+
+    // Default to image display
+    if (artwork.content?.url) {
+      return (
+        <div className="relative">
+          <img 
+            src={artwork.content.url} 
+            alt={artwork.title}
+            className="w-full h-auto max-h-[70vh] object-contain border border-border"
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-muted p-8 text-center text-muted-foreground">
+        No content available
+      </div>
+    );
   };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto bg-background border-l border-border">
-        <SheetHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <SheetTitle className="text-left font-light tracking-wide text-foreground">{artwork.title}</SheetTitle>
-              <SheetDescription className="text-left text-muted-foreground font-light">
-                Artwork details
-              </SheetDescription>
+      <SheetContent className="w-full sm:w-[90vw] sm:max-w-none overflow-y-auto">
+        <SheetHeader className="mb-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <SheetTitle className="text-2xl font-light tracking-wide mb-2">
+                {artwork.title}
+              </SheetTitle>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span>{artwork.profiles?.artist_name || artwork.profiles?.email?.split('@')[0] || 'Unknown Artist'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>{artwork.year || 'Year not specified'}</span>
+                </div>
+              </div>
+              {artwork.description && (
+                <p className="text-muted-foreground font-light leading-relaxed mb-4">
+                  {artwork.description}
+                </p>
+              )}
             </div>
+            
             {isOwner && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Artwork</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete "{artwork.title}"? This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteArtwork}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button
+                onClick={handleDelete}
+                variant="destructive"
+                size="sm"
+                className="shrink-0"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
             )}
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
+            <Badge variant="outline" className="font-light">
+              {artworkType === 'text' ? 'Text Artwork' : 
+               artworkType === 'threejs' ? '3D Scene' : 'Image'}
+            </Badge>
+            {artwork.medium && (
+              <Badge variant="outline" className="font-light">
+                <Palette className="h-3 w-3 mr-1" />
+                {artwork.medium}
+              </Badge>
+            )}
+            <Badge variant="outline" className="font-light">
+              <Hash className="h-3 w-3 mr-1" />
+              {artwork.id.slice(0, 8)}
+            </Badge>
           </div>
         </SheetHeader>
-        
-        <div className="mt-8 space-y-8">
-          {/* Artwork Content */}
-          <div className="w-full">
-            {artworkType === 'image' && imageUrl ? (
-              <img 
-                src={imageUrl} 
-                alt={artwork.title}
-                className="w-full h-auto max-h-96 object-contain border border-border"
-              />
-            ) : artworkType === 'text' && textContent ? (
-              <div className="border border-border p-6 rounded-lg bg-card">
-                <div className="flex items-center gap-2 mb-4">
-                  <FileText className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground font-medium">Text Artwork</span>
-                </div>
-                <div className="prose prose-sm max-w-none">
-                  <p className="text-foreground whitespace-pre-wrap leading-relaxed">
-                    {textContent}
-                  </p>
-                </div>
-              </div>
-            ) : artworkType === 'threejs' && threeData ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Box className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground font-medium">Interactive 3D Scene</span>
-                </div>
-                <ThreeViewer 
-                  sceneData={threeData} 
-                  artworkId={artwork.id}
-                  canEdit={isOwner}
-                  onSceneUpdate={handleSceneUpdate}
-                />
-              </div>
-            ) : null}
-          </div>
 
-          {/* Artwork Details */}
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-light tracking-wide mb-4 text-foreground">DETAILS</h3>
-              <div className="grid grid-cols-1 gap-4 text-sm">
-                {artwork.profiles?.email && (
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground font-light">Artist:</span>
-                    <span className="font-mono text-foreground">{artwork.profiles.email}</span>
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground font-light">Uploaded:</span>
-                  <span className="text-foreground">{new Date(artwork.created_at).toLocaleDateString()}</span>
-                </div>
-
-                {artwork.medium && (
-                  <div className="flex items-center gap-3">
-                    <Palette className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground font-light">Medium:</span>
-                    <Badge variant="secondary" className="bg-secondary text-secondary-foreground font-light tracking-wide">
-                      {artwork.medium}
-                    </Badge>
-                  </div>
-                )}
-
-                {artwork.year && (
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground font-light">Year:</span>
-                    <span className="text-foreground">{artwork.year}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {artwork.description && (
-              <div>
-                <h3 className="text-lg font-light tracking-wide mb-4 text-foreground">DESCRIPTION</h3>
-                <p className="text-muted-foreground leading-relaxed font-light">{artwork.description}</p>
-              </div>
-            )}
-          </div>
+        <div className="space-y-6">
+          {renderArtworkContent()}
         </div>
       </SheetContent>
     </Sheet>
