@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import sharp from 'https://deno.land/x/sharp@0.32.6/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,13 +52,21 @@ serve(async (req) => {
 
     // Convert blob to array buffer
     const arrayBuffer = await imageData.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    // Use Sharp to crop the image
+    const croppedImageBuffer = await sharp(new Uint8Array(arrayBuffer))
+      .extract({ 
+        left: x, 
+        top: y, 
+        width: width, 
+        height: height 
+      })
+      .jpeg({ quality: 90 })
+      .toBuffer();
 
-    // Create a simple crop function using Canvas API simulation
-    // Note: This is a basic implementation. For production use, consider using a proper image processing library
-    const croppedImageData = await cropImage(uint8Array, x, y, width, height);
+    console.log(`Successfully cropped image. Original size: ${arrayBuffer.byteLength}, Cropped size: ${croppedImageBuffer.length}`);
 
-    return new Response(croppedImageData, {
+    return new Response(croppedImageBuffer, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'image/jpeg',
@@ -67,21 +76,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in crop-image function:', error);
-    return new Response('Internal server error', { 
+    return new Response(`Internal server error: ${error.message}`, { 
       status: 500,
       headers: corsHeaders
     });
   }
 });
-
-async function cropImage(imageData: Uint8Array, x: number, y: number, width: number, height: number): Promise<Uint8Array> {
-  // This is a simplified version. In a real implementation, you'd use a proper image processing library
-  // For now, we'll return the original image data as a placeholder
-  // You can integrate libraries like 'imagescript' or use WebAssembly-based solutions
-  
-  console.log('Cropping parameters:', { x, y, width, height });
-  
-  // Placeholder: return original image data
-  // TODO: Implement actual cropping logic with a proper image library
-  return imageData;
-}
