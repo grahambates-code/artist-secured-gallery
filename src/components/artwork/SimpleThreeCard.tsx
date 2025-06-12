@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trash2, Image } from 'lucide-react';
 import { captureThreeScene } from '@/utils/threeCapture';
-import { renderQueue } from '@/utils/renderQueue';
 
 interface Artwork {
   id: string;
@@ -51,12 +49,10 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
       setCaptureError(false);
       
       try {
-        console.log('Adding capture task to render queue...');
+        console.log('Calling captureThreeScene directly...');
         
-        const screenshot = await renderQueue.add(() => {
-          console.log('Executing capture task...');
-          return captureThreeScene(artwork.content, 400, 400);
-        });
+        // Call captureThreeScene directly without wrapping in another render queue task
+        const screenshot = await captureThreeScene(artwork.content, 400, 400);
         
         console.log('Capture result:', screenshot ? 'success' : 'failed');
         
