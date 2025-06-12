@@ -57,6 +57,23 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
     ...artwork.content
   };
 
+  // Debug log the camera position and cube position
+  useEffect(() => {
+    const distance = Math.sqrt(
+      Math.pow(threeData.cameraPosition.x - threeData.position.x, 2) +
+      Math.pow(threeData.cameraPosition.y - threeData.position.y, 2) +
+      Math.pow(threeData.cameraPosition.z - threeData.position.z, 2)
+    );
+    
+    if (distance > 50) {
+      console.warn('Camera very far from cube in grid view:', {
+        cameraPosition: threeData.cameraPosition,
+        cubePosition: threeData.position,
+        distance: distance
+      });
+    }
+  }, [threeData.cameraPosition, threeData.position]);
+
   useEffect(() => {
     const captureScene = async () => {
       try {
@@ -140,10 +157,24 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
               camera={{ 
                 position: [threeData.cameraPosition.x, threeData.cameraPosition.y, threeData.cameraPosition.z], 
                 fov: 75,
-                aspect: 1
+                aspect: 1,
+                near: 0.1,
+                far: 1000
               }}
               className="w-full h-full"
               onClick={handle3DClick}
+              onCreated={({ camera, gl }) => {
+                // Ensure camera is properly positioned
+                camera.position.set(
+                  threeData.cameraPosition.x, 
+                  threeData.cameraPosition.y, 
+                  threeData.cameraPosition.z
+                );
+                camera.updateProjectionMatrix();
+                
+                // Look at the cube
+                camera.lookAt(threeData.position.x, threeData.position.y, threeData.position.z);
+              }}
             >
               <ambientLight intensity={0.6} />
               <pointLight position={[5, 5, 5]} intensity={1.2} />
@@ -163,6 +194,7 @@ const SimpleThreeCard = ({ artwork, canDelete, onClick, onDelete }: SimpleThreeC
                 enableZoom={true}
                 enableDamping={true}
                 dampingFactor={0.05}
+                target={[threeData.position.x, threeData.position.y, threeData.position.z]}
               />
             </Canvas>
           ) : (
