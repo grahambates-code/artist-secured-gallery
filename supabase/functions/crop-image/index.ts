@@ -1,4 +1,5 @@
 
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -53,16 +54,16 @@ serve(async (req) => {
     const arrayBuffer = await imageData.arrayBuffer();
     
     // Use ImageScript for image processing (works in Deno)
-    const { decode, encode, crop } = await import('https://deno.land/x/imagescript@1.2.15/mod.ts');
+    const { Image } = await import('https://deno.land/x/imagescript@1.2.15/mod.ts');
     
     // Decode the image
-    const image = decode(new Uint8Array(arrayBuffer));
+    const image = await Image.decode(new Uint8Array(arrayBuffer));
     
-    // Crop the image
-    const croppedImage = crop(image, x, y, width, height);
+    // Crop the image using the crop method
+    const croppedImage = image.crop(x, y, width, height);
     
     // Encode back to JPEG
-    const croppedBuffer = encode(croppedImage, 'jpeg', 90);
+    const croppedBuffer = await croppedImage.encode();
 
     console.log(`Successfully cropped image. Original size: ${arrayBuffer.byteLength}, Cropped size: ${croppedBuffer.length}`);
 
@@ -82,3 +83,4 @@ serve(async (req) => {
     });
   }
 });
+
